@@ -1,4 +1,4 @@
-// Copyright (c) 2026 alvarocabrero. Licensed under the MIT License. See LICENSE in the repository root.
+// Copyright (c) 2026 Álvaro Cabrero Barros. Licensed under the MIT License. See LICENSE in the repository root.
 
 #include "HordeKillerHUD.h"
 #include "Engine/Canvas.h"
