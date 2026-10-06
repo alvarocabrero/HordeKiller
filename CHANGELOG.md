@@ -12,7 +12,8 @@ All notable changes to this project are listed here. The format follows [Keep a 
 ### Changed
 
 - Source files are grouped into `Characters`, `Weapons`, `Game` and `UI` folders.
-- The player and the enemy now inherit from a new abstract base class, `AHuman`, which holds their shared health, damage and death logic. Gameplay values are unchanged.
+- The player and the enemy now inherit from a new abstract base class, `AHKHuman`, which holds their shared health, damage and death logic. Gameplay values are unchanged.
+- Project classes are renamed to use an `HK` prefix after the Unreal type prefix (`AHordeKillerCharacter` is now `AHKCharacter`, and so on), and their files are renamed to match. The default game mode setting in `Config/DefaultEngine.ini` points to `HKGameMode`.
 
 ## 0.1.0 - 2026-10-06
 

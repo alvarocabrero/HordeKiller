@@ -20,6 +20,7 @@ Follow the steps in the [README](README.md#getting-started) to clone, generate p
 ## Code style
 
 - Follow Epic's [C++ coding standard](https://dev.epicgames.com/documentation/en-us/unreal-engine/epic-cplusplus-coding-standard-for-unreal-engine): tabs for indentation, PascalCase names, and the `A` / `U` / `F` / `E` / `b` prefixes.
+- Name every type created for this project with `HK` right after the Unreal type prefix: `AHKCharacter` for an actor, `UHKHealthComponent` for an object or component, `FHKWaveConfig` for a struct, `EHKEnemyState` for an enum, `IHKDamageable` for an interface. Name the files after the type without that first letter (`HKCharacter.h`, `HKCharacter.cpp`).
 - Write all code, comments and documentation in English.
 - Document every class, function and property in the headers with `/** ... */` comments. Property comments become tooltips in the editor, so state the unit (cm, cm/s, seconds).
 - In `.cpp` files, comment the reason behind anything that is not obvious from the code itself.

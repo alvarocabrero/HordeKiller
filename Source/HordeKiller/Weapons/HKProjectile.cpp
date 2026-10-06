@@ -1,13 +1,13 @@
 // Copyright (c) 2026 Álvaro Cabrero Barros. Licensed under the MIT License. See LICENSE in the repository root.
 
-#include "Weapons/HordeKillerProjectile.h"
+#include "Weapons/HKProjectile.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
 #include "Kismet/GameplayStatics.h"
-#include "Characters/HordeKillerEnemy.h"
+#include "Characters/HKEnemy.h"
 #include "UObject/ConstructorHelpers.h"
 
-AHordeKillerProjectile::AHordeKillerProjectile()
+AHKProjectile::AHKProjectile()
 {
 	// Ticking is needed only to sample the velocity each frame (see PreHitVelocity).
 	PrimaryActorTick.bCanEverTick = true;
@@ -51,10 +51,10 @@ AHordeKillerProjectile::AHordeKillerProjectile()
 	// Continuous collision detection sweeps the body between frames so it cannot tunnel through enemies.
 	Mesh->BodyInstance.bUseCCD = true;
 
-	Mesh->OnComponentHit.AddDynamic(this, &AHordeKillerProjectile::OnHit);
+	Mesh->OnComponentHit.AddDynamic(this, &AHKProjectile::OnHit);
 }
 
-void AHordeKillerProjectile::Launch(const FVector& Direction)
+void AHKProjectile::Launch(const FVector& Direction)
 {
 	const FVector LaunchVelocity = Direction.GetSafeNormal() * LaunchSpeed;
 
@@ -66,7 +66,7 @@ void AHordeKillerProjectile::Launch(const FVector& Direction)
 	PreHitVelocity = LaunchVelocity;
 }
 
-void AHordeKillerProjectile::Tick(float DeltaSeconds)
+void AHKProjectile::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
@@ -74,12 +74,12 @@ void AHordeKillerProjectile::Tick(float DeltaSeconds)
 	PreHitVelocity = Mesh->GetPhysicsLinearVelocity();
 }
 
-void AHordeKillerProjectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+void AHKProjectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	FVector NormalImpulse, const FHitResult& Hit)
 {
 	// Only enemies take damage, and only from a projectile that is still moving fast. The speed check
 	// stops spent balls lying on the floor from hurting enemies that walk into them.
-	AHordeKillerEnemy* Enemy = Cast<AHordeKillerEnemy>(OtherActor);
+	AHKEnemy* Enemy = Cast<AHKEnemy>(OtherActor);
 	if (!Enemy || PreHitVelocity.Size() < MinDamageSpeed)
 	{
 		// Everything else (floor, walls, the player, slow impacts) is left to the physics simulation,
@@ -95,7 +95,7 @@ void AHordeKillerProjectile::OnHit(UPrimitiveComponent* HitComponent, AActor* Ot
 	Knockback.Z = KnockbackStrength * 0.3f;
 	Enemy->LaunchCharacter(Knockback, true, true);
 
-	// Standard engine damage path: this ends up in AHordeKillerEnemy::TakeDamage. The instigator
+	// Standard engine damage path: this ends up in AHKEnemy::TakeDamage. The instigator
 	// controller is the player's, taken from the Instigator set when the projectile was spawned.
 	UGameplayStatics::ApplyDamage(Enemy, Damage, GetInstigatorController(), this, nullptr);
 

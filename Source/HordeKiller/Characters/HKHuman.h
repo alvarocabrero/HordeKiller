@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "Human.generated.h"
+#include "HKHuman.generated.h"
 
 /**
  * Base class for every character in the game: the player and the enemies.
@@ -18,7 +18,7 @@
  * The class is abstract: it cannot be spawned or placed in a level on its own.
  */
 UCLASS(Abstract)
-class HORDEKILLER_API AHuman : public ACharacter
+class HORDEKILLER_API AHKHuman : public ACharacter
 {
 	GENERATED_BODY()
 

@@ -1,30 +1,30 @@
 // Copyright (c) 2026 Álvaro Cabrero Barros. Licensed under the MIT License. See LICENSE in the repository root.
 
-#include "Game/HordeKillerGameMode.h"
+#include "Game/HKGameMode.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/StaticMeshActor.h"
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
 #include "Materials/MaterialInstanceDynamic.h"
-#include "Characters/HordeKillerCharacter.h"
-#include "Characters/HordeKillerEnemy.h"
-#include "UI/HordeKillerHUD.h"
+#include "Characters/HKCharacter.h"
+#include "Characters/HKEnemy.h"
+#include "UI/HKHUD.h"
 #include "TimerManager.h"
 
 // Log category for gameplay events (waves, deaths). Filter the Output Log by "LogHordeKiller" to see them.
 DEFINE_LOG_CATEGORY_STATIC(LogHordeKiller, Log, All);
 
-AHordeKillerGameMode::AHordeKillerGameMode()
+AHKGameMode::AHKGameMode()
 {
 	// These make the game mode self-sufficient: the player spawns as the C++ character with the C++ HUD
 	// without any Blueprint or project setting beyond selecting this game mode.
-	DefaultPawnClass = AHordeKillerCharacter::StaticClass();
-	HUDClass = AHordeKillerHUD::StaticClass();
-	EnemyClass = AHordeKillerEnemy::StaticClass();
+	DefaultPawnClass = AHKCharacter::StaticClass();
+	HUDClass = AHKHUD::StaticClass();
+	EnemyClass = AHKEnemy::StaticClass();
 }
 
-void AHordeKillerGameMode::BeginPlay()
+void AHKGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -35,10 +35,10 @@ void AHordeKillerGameMode::BeginPlay()
 
 	// Give the player a moment to get their bearings before the first wave. The timer is one-shot;
 	// later waves are scheduled from NotifyEnemyKilled.
-	GetWorldTimerManager().SetTimer(WaveTimer, this, &AHordeKillerGameMode::StartNextWave, TimeBetweenWaves, false);
+	GetWorldTimerManager().SetTimer(WaveTimer, this, &AHKGameMode::StartNextWave, TimeBetweenWaves, false);
 }
 
-void AHordeKillerGameMode::SpawnArenaBlock(const FVector& Location, const FVector& Size, const FLinearColor& Color)
+void AHKGameMode::SpawnArenaBlock(const FVector& Location, const FVector& Size, const FLinearColor& Color)
 {
 	// LoadObject is used here, instead of the constructor-only FObjectFinder, because this runs during play.
 	UStaticMesh* Cube = LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Cube.Cube"));
@@ -66,7 +66,7 @@ void AHordeKillerGameMode::SpawnArenaBlock(const FVector& Location, const FVecto
 	}
 }
 
-void AHordeKillerGameMode::BuildArena()
+void AHKGameMode::BuildArena()
 {
 	const float Side = ArenaHalfSize * 2.f;
 	const float FloorThickness = 100.f;
@@ -88,7 +88,7 @@ void AHordeKillerGameMode::BuildArena()
 	SpawnArenaBlock(FVector(0.f, -WallOffset, WallZ), FVector(Side, WallThickness, ArenaWallHeight), WallColor); // -Y side
 }
 
-void AHordeKillerGameMode::StartNextWave()
+void AHKGameMode::StartNextWave()
 {
 	if (bGameOver || !EnemyClass)
 	{
@@ -130,7 +130,7 @@ void AHordeKillerGameMode::StartNextWave()
 		// (half-height 88 cm) just clear of the ground, and the enemy drops into place.
 		Location.Z = ArenaFloorZ + 100.f;
 
-		if (GetWorld()->SpawnActor<AHordeKillerEnemy>(EnemyClass, Location, FRotator::ZeroRotator, Params))
+		if (GetWorld()->SpawnActor<AHKEnemy>(EnemyClass, Location, FRotator::ZeroRotator, Params))
 		{
 			++Spawned;
 		}
@@ -141,7 +141,7 @@ void AHordeKillerGameMode::StartNextWave()
 	UE_LOG(LogHordeKiller, Log, TEXT("Wave %d started: %d enemies spawned around %s"), CurrentWave, Spawned, *Center.ToString());
 }
 
-void AHordeKillerGameMode::NotifyEnemyKilled()
+void AHKGameMode::NotifyEnemyKilled()
 {
 	++Kills;
 
@@ -152,11 +152,11 @@ void AHordeKillerGameMode::NotifyEnemyKilled()
 	if (EnemiesAlive == 0 && !bGameOver)
 	{
 		UE_LOG(LogHordeKiller, Log, TEXT("Wave %d cleared (%d kills)"), CurrentWave, Kills);
-		GetWorldTimerManager().SetTimer(WaveTimer, this, &AHordeKillerGameMode::StartNextWave, TimeBetweenWaves, false);
+		GetWorldTimerManager().SetTimer(WaveTimer, this, &AHKGameMode::StartNextWave, TimeBetweenWaves, false);
 	}
 }
 
-void AHordeKillerGameMode::NotifyPlayerDied()
+void AHKGameMode::NotifyPlayerDied()
 {
 	// Guard against being called twice, which would schedule two restarts.
 	if (bGameOver)
@@ -170,10 +170,10 @@ void AHordeKillerGameMode::NotifyPlayerDied()
 	// Cancel a wave that may be pending, then leave the game-over message on screen for a moment
 	// before starting again.
 	GetWorldTimerManager().ClearTimer(WaveTimer);
-	GetWorldTimerManager().SetTimer(RestartTimer, this, &AHordeKillerGameMode::RestartLevel, RestartDelay, false);
+	GetWorldTimerManager().SetTimer(RestartTimer, this, &AHKGameMode::RestartLevel, RestartDelay, false);
 }
 
-void AHordeKillerGameMode::RestartLevel()
+void AHKGameMode::RestartLevel()
 {
 	// Reloading the level recreates the game mode, the player and the arena, so no state has to be
 	// reset by hand. GetCurrentLevelName strips the prefix the editor adds when playing in the editor.

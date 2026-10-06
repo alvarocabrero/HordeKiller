@@ -3,10 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Characters/Human.h"
-#include "HordeKillerCharacter.generated.h"
+#include "Characters/HKHuman.h"
+#include "HKCharacter.generated.h"
 
-class AHordeKillerProjectile;
+class AHKProjectile;
 class UCameraComponent;
 class UInputAction;
 class UInputMappingContext;
@@ -20,20 +20,20 @@ struct FInputActionValue;
  * the editor, the input actions and the key mappings are built in code the first time they are needed.
  * Any of them can be replaced by assigning a real asset to the matching property in a child Blueprint.
  *
- * Health, taking damage and the dead state are inherited from AHuman. This class adds what dying
+ * Health, taking damage and the dead state are inherited from AHKHuman. This class adds what dying
  * means for the player: freezing in place and telling the game mode that the game is over.
  */
 UCLASS()
-class HORDEKILLER_API AHordeKillerCharacter : public AHuman
+class HORDEKILLER_API AHKCharacter : public AHKHuman
 {
 	GENERATED_BODY()
 
 public:
 	/** Creates the camera and weapon components and configures first-person movement. */
-	AHordeKillerCharacter();
+	AHKCharacter();
 
 protected:
-	/** Stops the player's movement and input and notifies the game mode. Called once by AHuman when health reaches zero. */
+	/** Stops the player's movement and input and notifies the game mode. Called once by AHKHuman when health reaches zero. */
 	virtual void HandleDeath() override;
 
 	/** Registers the input mapping context with the local player whenever a player controller takes over. */
@@ -80,7 +80,7 @@ protected:
 
 	/** Projectile class spawned on each shot. Replace it with a child Blueprint to change the projectile's look or values. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
-	TSubclassOf<AHordeKillerProjectile> ProjectileClass;
+	TSubclassOf<AHKProjectile> ProjectileClass;
 
 	/** Minimum time between two shots while the fire button is held, in seconds. 0.2 means five shots per second. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")

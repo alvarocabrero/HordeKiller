@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/HUD.h"
-#include "HordeKillerHUD.generated.h"
+#include "HKHUD.generated.h"
 
 /**
  * Minimal heads-up display drawn straight onto the canvas.
@@ -14,7 +14,7 @@
  * so it needs no assets and no extra module dependencies.
  */
 UCLASS()
-class HORDEKILLER_API AHordeKillerHUD : public AHUD
+class HORDEKILLER_API AHKHUD : public AHUD
 {
 	GENERATED_BODY()
 

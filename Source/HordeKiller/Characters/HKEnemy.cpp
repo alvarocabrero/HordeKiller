@@ -1,17 +1,17 @@
 // Copyright (c) 2026 Álvaro Cabrero Barros. Licensed under the MIT License. See LICENSE in the repository root.
 
-#include "Characters/HordeKillerEnemy.h"
+#include "Characters/HKEnemy.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Materials/MaterialInstanceDynamic.h"
-#include "Characters/HordeKillerCharacter.h"
-#include "Game/HordeKillerGameMode.h"
+#include "Characters/HKCharacter.h"
+#include "Game/HKGameMode.h"
 #include "UObject/ConstructorHelpers.h"
 
-AHordeKillerEnemy::AHordeKillerEnemy()
+AHKEnemy::AHKEnemy()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -53,17 +53,17 @@ AHordeKillerEnemy::AHordeKillerEnemy()
 	// Rotation comes from movement (above), not from the AI controller.
 	bUseControllerRotationYaw = false;
 
-	// Starting health, inherited from AHuman. Each projectile deals 1 damage by default, so 2 means two
+	// Starting health, inherited from AHKHuman. Each projectile deals 1 damage by default, so 2 means two
 	// shots to kill.
 	MaxHealth = 2.f;
 }
 
-void AHordeKillerEnemy::BeginPlay()
+void AHKEnemy::BeginPlay()
 {
 	Super::BeginPlay();
 
 	// Read the tunable property here rather than in the constructor so that values changed in a child
-	// Blueprint or on a placed instance are respected. Health is initialised by AHuman.
+	// Blueprint or on a placed instance are respected. Health is initialised by AHKHuman.
 	GetCharacterMovement()->MaxWalkSpeed = MoveSpeed;
 
 	// A dynamic material instance lets this enemy change colour without affecting the others. The
@@ -75,7 +75,7 @@ void AHordeKillerEnemy::BeginPlay()
 	}
 }
 
-void AHordeKillerEnemy::Tick(float DeltaSeconds)
+void AHKEnemy::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
@@ -86,7 +86,7 @@ void AHordeKillerEnemy::Tick(float DeltaSeconds)
 
 	// Single-player game: the target is always player 0. Stop chasing once the player is dead so the
 	// horde does not keep attacking during the game-over delay.
-	const AHordeKillerCharacter* Player = Cast<AHordeKillerCharacter>(UGameplayStatics::GetPlayerPawn(this, 0));
+	const AHKCharacter* Player = Cast<AHKCharacter>(UGameplayStatics::GetPlayerPawn(this, 0));
 	if (!Player || Player->IsDead())
 	{
 		return;
@@ -113,11 +113,11 @@ void AHordeKillerEnemy::Tick(float DeltaSeconds)
 
 		// ApplyDamage takes a non-const actor; the player pointer is const here only because this
 		// function does not otherwise modify the player.
-		UGameplayStatics::ApplyDamage(const_cast<AHordeKillerCharacter*>(Player), AttackDamage, GetController(), this, nullptr);
+		UGameplayStatics::ApplyDamage(const_cast<AHKCharacter*>(Player), AttackDamage, GetController(), this, nullptr);
 	}
 }
 
-void AHordeKillerEnemy::HandleDamaged(float DamageApplied)
+void AHKEnemy::HandleDamaged(float DamageApplied)
 {
 	Super::HandleDamaged(DamageApplied);
 
@@ -128,12 +128,12 @@ void AHordeKillerEnemy::HandleDamaged(float DamageApplied)
 	}
 }
 
-void AHordeKillerEnemy::HandleDeath()
+void AHKEnemy::HandleDeath()
 {
 	Super::HandleDeath();
 
 	// The game mode keeps the kill count and decides when the wave is over.
-	if (AHordeKillerGameMode* GameMode = GetWorld()->GetAuthGameMode<AHordeKillerGameMode>())
+	if (AHKGameMode* GameMode = GetWorld()->GetAuthGameMode<AHKGameMode>())
 	{
 		GameMode->NotifyEnemyKilled();
 	}

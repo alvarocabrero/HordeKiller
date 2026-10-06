@@ -1,6 +1,6 @@
 // Copyright (c) 2026 Álvaro Cabrero Barros. Licensed under the MIT License. See LICENSE in the repository root.
 
-#include "Characters/HordeKillerCharacter.h"
+#include "Characters/HKCharacter.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -14,11 +14,11 @@
 #include "InputActionValue.h"
 #include "InputMappingContext.h"
 #include "InputModifiers.h"
-#include "Game/HordeKillerGameMode.h"
-#include "Weapons/HordeKillerProjectile.h"
+#include "Game/HKGameMode.h"
+#include "Weapons/HKProjectile.h"
 #include "UObject/ConstructorHelpers.h"
 
-AHordeKillerCharacter::AHordeKillerCharacter()
+AHKCharacter::AHKCharacter()
 {
 	// Radius and half-height of the collision capsule, in cm: the engine's usual human-sized character.
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.f);
@@ -64,13 +64,13 @@ AHordeKillerCharacter::AHordeKillerCharacter()
 	}
 
 	// Default to the C++ projectile; a child Blueprint can point this at its own projectile class.
-	ProjectileClass = AHordeKillerProjectile::StaticClass();
+	ProjectileClass = AHKProjectile::StaticClass();
 
-	// Starting health, inherited from AHuman. Each enemy attack removes 10 by default.
+	// Starting health, inherited from AHKHuman. Each enemy attack removes 10 by default.
 	MaxHealth = 100.f;
 }
 
-void AHordeKillerCharacter::CreateDefaultInputAssets()
+void AHKCharacter::CreateDefaultInputAssets()
 {
 	// Enhanced Input normally relies on assets authored in the editor. Creating them here as transient
 	// objects owned by the character gives the same result with no content in the project. Each one is
@@ -148,7 +148,7 @@ void AHordeKillerCharacter::CreateDefaultInputAssets()
 	Context->MapKey(FireAction, EKeys::LeftMouseButton);
 }
 
-void AHordeKillerCharacter::NotifyControllerChanged()
+void AHKCharacter::NotifyControllerChanged()
 {
 	Super::NotifyControllerChanged();
 
@@ -168,7 +168,7 @@ void AHordeKillerCharacter::NotifyControllerChanged()
 	}
 }
 
-void AHordeKillerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+void AHKCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
@@ -186,16 +186,16 @@ void AHordeKillerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInp
 		Input->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
 		// "Triggered" fires on every frame the input is active, which is what continuous actions need.
-		Input->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AHordeKillerCharacter::Move);
-		Input->BindAction(LookAction, ETriggerEvent::Triggered, this, &AHordeKillerCharacter::Look);
+		Input->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AHKCharacter::Move);
+		Input->BindAction(LookAction, ETriggerEvent::Triggered, this, &AHKCharacter::Look);
 
 		// Fire is also called every frame while the button is held; FireInterval limits the real rate,
 		// which is what gives automatic fire.
-		Input->BindAction(FireAction, ETriggerEvent::Triggered, this, &AHordeKillerCharacter::Fire);
+		Input->BindAction(FireAction, ETriggerEvent::Triggered, this, &AHKCharacter::Fire);
 	}
 }
 
-void AHordeKillerCharacter::Move(const FInputActionValue& Value)
+void AHKCharacter::Move(const FInputActionValue& Value)
 {
 	const FVector2D Axis = Value.Get<FVector2D>();
 	if (!Controller)
@@ -209,7 +209,7 @@ void AHordeKillerCharacter::Move(const FInputActionValue& Value)
 	AddMovementInput(GetActorRightVector(), Axis.X);
 }
 
-void AHordeKillerCharacter::Look(const FInputActionValue& Value)
+void AHKCharacter::Look(const FInputActionValue& Value)
 {
 	const FVector2D Axis = Value.Get<FVector2D>();
 
@@ -219,7 +219,7 @@ void AHordeKillerCharacter::Look(const FInputActionValue& Value)
 	AddControllerPitchInput(Axis.Y);
 }
 
-void AHordeKillerCharacter::Fire()
+void AHKCharacter::Fire()
 {
 	UWorld* World = GetWorld();
 	if (IsDead() || !ProjectileClass || !World)
@@ -250,15 +250,15 @@ void AHordeKillerCharacter::Fire()
 	// otherwise the shot would silently fail.
 	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	if (AHordeKillerProjectile* Projectile =
-			World->SpawnActor<AHordeKillerProjectile>(ProjectileClass, SpawnLocation, AimRotation, Params))
+	if (AHKProjectile* Projectile =
+			World->SpawnActor<AHKProjectile>(ProjectileClass, SpawnLocation, AimRotation, Params))
 	{
 		// Spawning only places the projectile; the impulse is what sets it in motion.
 		Projectile->Launch(AimDirection);
 	}
 }
 
-void AHordeKillerCharacter::HandleDeath()
+void AHKCharacter::HandleDeath()
 {
 	Super::HandleDeath();
 
@@ -270,7 +270,7 @@ void AHordeKillerCharacter::HandleDeath()
 	}
 
 	// The game mode shows the game-over state and restarts the level after a delay.
-	if (AHordeKillerGameMode* GameMode = GetWorld()->GetAuthGameMode<AHordeKillerGameMode>())
+	if (AHKGameMode* GameMode = GetWorld()->GetAuthGameMode<AHKGameMode>())
 	{
 		GameMode->NotifyPlayerDied();
 	}

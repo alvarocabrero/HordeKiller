@@ -3,8 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Characters/Human.h"
-#include "HordeKillerEnemy.generated.h"
+#include "Characters/HKHuman.h"
+#include "HKEnemy.generated.h"
 
 class UMaterialInstanceDynamic;
 class UStaticMeshComponent;
@@ -19,17 +19,17 @@ class UStaticMeshComponent;
  * The enemy does not use the navigation system: it steers directly at the player every frame, which
  * is enough for an open arena without obstacles.
  *
- * Health, taking damage and the dead state are inherited from AHuman. This class adds the reaction to
+ * Health, taking damage and the dead state are inherited from AHKHuman. This class adds the reaction to
  * a hit (the colour change) and what dying means for an enemy (counting the kill and disappearing).
  */
 UCLASS()
-class HORDEKILLER_API AHordeKillerEnemy : public AHuman
+class HORDEKILLER_API AHKEnemy : public AHKHuman
 {
 	GENERATED_BODY()
 
 public:
 	/** Builds the placeholder body and configures movement and AI possession. */
-	AHordeKillerEnemy();
+	AHKEnemy();
 
 	/**
 	 * Chases the player and attacks when in range.
@@ -43,13 +43,13 @@ protected:
 	virtual void BeginPlay() override;
 
 	/**
-	 * Switches the body to the wounded colour. Called by AHuman after a hit the enemy survives.
+	 * Switches the body to the wounded colour. Called by AHKHuman after a hit the enemy survives.
 	 *
 	 * @param DamageApplied Damage removed from health by this hit.
 	 */
 	virtual void HandleDamaged(float DamageApplied) override;
 
-	/** Reports the kill to the game mode and removes the enemy from the world. Called once by AHuman when health reaches zero. */
+	/** Reports the kill to the game mode and removes the enemy from the world. Called once by AHKHuman when health reaches zero. */
 	virtual void HandleDeath() override;
 
 	/** Placeholder body: an engine cylinder scaled to fill the collision capsule. It has no collision of its own. */

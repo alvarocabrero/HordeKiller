@@ -1,13 +1,13 @@
 // Copyright (c) 2026 Álvaro Cabrero Barros. Licensed under the MIT License. See LICENSE in the repository root.
 
-#include "UI/HordeKillerHUD.h"
+#include "UI/HKHUD.h"
 #include "Engine/Canvas.h"
 #include "Engine/Engine.h"
 #include "Engine/Font.h"
-#include "Characters/HordeKillerCharacter.h"
-#include "Game/HordeKillerGameMode.h"
+#include "Characters/HKCharacter.h"
+#include "Game/HKGameMode.h"
 
-void AHordeKillerHUD::DrawHUD()
+void AHKHUD::DrawHUD()
 {
 	Super::DrawHUD();
 
@@ -32,7 +32,7 @@ void AHordeKillerHUD::DrawHUD()
 	const float TextScale = 1.5f;
 
 	// Health, bottom-left. Rounded up so that the last fraction of health never reads as 0 while alive.
-	if (const AHordeKillerCharacter* Player = Cast<AHordeKillerCharacter>(GetOwningPawn()))
+	if (const AHKCharacter* Player = Cast<AHKCharacter>(GetOwningPawn()))
 	{
 		const FString HealthText = FString::Printf(TEXT("Health: %d / %d"),
 			FMath::CeilToInt(Player->GetHealth()), FMath::CeilToInt(Player->GetMaxHealth()));
@@ -41,7 +41,7 @@ void AHordeKillerHUD::DrawHUD()
 
 	// Wave information, top-left. The game mode exists only on the machine running the game rules,
 	// which in this single-player game is always the local one.
-	if (const AHordeKillerGameMode* GameMode = GetWorld()->GetAuthGameMode<AHordeKillerGameMode>())
+	if (const AHKGameMode* GameMode = GetWorld()->GetAuthGameMode<AHKGameMode>())
 	{
 		const FString WaveText = FString::Printf(TEXT("Wave: %d   Enemies: %d   Kills: %d"),
 			GameMode->GetCurrentWave(), GameMode->GetEnemiesAlive(), GameMode->GetKills());

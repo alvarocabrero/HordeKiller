@@ -4,9 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
-#include "HordeKillerGameMode.generated.h"
+#include "HKGameMode.generated.h"
 
-class AHordeKillerEnemy;
+class AHKEnemy;
 
 /**
  * Rules of the game: the horde loop.
@@ -18,13 +18,13 @@ class AHordeKillerEnemy;
  * It selects the player character and HUD classes too, so no Blueprint game mode is required.
  */
 UCLASS()
-class HORDEKILLER_API AHordeKillerGameMode : public AGameModeBase
+class HORDEKILLER_API AHKGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
 
 public:
 	/** Selects the default pawn, HUD and enemy classes. */
-	AHordeKillerGameMode();
+	AHKGameMode();
 
 	/** Called by an enemy when it dies. Updates the counters and schedules the next wave if it was the last one. */
 	void NotifyEnemyKilled();
@@ -68,7 +68,7 @@ protected:
 
 	/** Enemy class spawned by the waves. Replace it with a child Blueprint to change the enemy's look or values. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Waves")
-	TSubclassOf<AHordeKillerEnemy> EnemyClass;
+	TSubclassOf<AHKEnemy> EnemyClass;
 
 	/** Number of enemies in the first wave. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Waves")

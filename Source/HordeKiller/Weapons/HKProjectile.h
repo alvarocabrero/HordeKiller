@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "HordeKillerProjectile.generated.h"
+#include "HKProjectile.generated.h"
 
 class UStaticMeshComponent;
 
@@ -19,13 +19,13 @@ class UStaticMeshComponent;
  * then destroys itself. Projectiles that never hit an enemy are removed when their life span expires.
  */
 UCLASS()
-class HORDEKILLER_API AHordeKillerProjectile : public AActor
+class HORDEKILLER_API AHKProjectile : public AActor
 {
 	GENERATED_BODY()
 
 public:
 	/** Sets up the simulated sphere, its collision and the hit callback. */
-	AHordeKillerProjectile();
+	AHKProjectile();
 
 	/**
 	 * Fires the projectile by applying a one-off physics impulse.

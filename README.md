@@ -65,16 +65,16 @@ Adjust the engine path in the commands above if Unreal Engine is installed somew
 
 Every gameplay value is an editable property. Change the defaults in the headers, or create a child Blueprint of the class and edit them in the Details panel. Distances are in centimetres, speeds in centimetres per second and times in seconds.
 
-### Weapon and player (`AHordeKillerCharacter`)
+### Weapon and player (`AHKCharacter`)
 
 | Property | Default | Meaning |
 | --- | --- | --- |
 | `FireInterval` | 0.2 | Time between shots while fire is held |
 | `MuzzleDistance` | 100 | Distance in front of the camera where projectiles spawn |
-| `MaxHealth` | 100 | Starting health (property inherited from `AHuman`) |
-| `ProjectileClass` | `AHordeKillerProjectile` | Projectile spawned on each shot |
+| `MaxHealth` | 100 | Starting health (property inherited from `AHKHuman`) |
+| `ProjectileClass` | `AHKProjectile` | Projectile spawned on each shot |
 
-### Projectile (`AHordeKillerProjectile`)
+### Projectile (`AHKProjectile`)
 
 | Property | Default | Meaning |
 | --- | --- | --- |
@@ -83,18 +83,18 @@ Every gameplay value is an editable property. Change the defaults in the headers
 | `MinDamageSpeed` | 600 | Speed below which a projectile no longer deals damage |
 | `KnockbackStrength` | 350 | Speed given to the enemy that is hit |
 
-### Enemy (`AHordeKillerEnemy`)
+### Enemy (`AHKEnemy`)
 
 | Property | Default | Meaning |
 | --- | --- | --- |
-| `MaxHealth` | 2 | Starting health (inherited from `AHuman`); with `Damage` at 1 this is two shots |
+| `MaxHealth` | 2 | Starting health (inherited from `AHKHuman`); with `Damage` at 1 this is two shots |
 | `MoveSpeed` | 380 | Running speed (the player runs at 600) |
 | `AttackDamage` | 10 | Damage dealt to the player per attack |
 | `AttackRange` | 110 | Distance at which an attack lands |
 | `AttackCooldown` | 1 | Time between attacks |
 | `HealthyColor` / `WoundedColor` | red / orange | Body colour before and after the first hit |
 
-### Waves and arena (`AHordeKillerGameMode`)
+### Waves and arena (`AHKGameMode`)
 
 | Property | Default | Meaning |
 | --- | --- | --- |
@@ -121,29 +121,31 @@ Source/
     HordeKiller.Build.cs      Module build rules and dependencies
     HordeKiller.h / .cpp      Module registration
     Characters/
-      Human.*                 Base class of player and enemy: health, damage, death
-      HordeKillerCharacter.*  Player: movement, input, weapon
-      HordeKillerEnemy.*      Enemy: chase, attack
+      HKHuman.*               Base class of player and enemy: health, damage, death
+      HKCharacter.*           Player: movement, input, weapon
+      HKEnemy.*               Enemy: chase, attack
     Weapons/
-      HordeKillerProjectile.* Physics projectile
+      HKProjectile.*          Physics projectile
     Game/
-      HordeKillerGameMode.*   Arena generation, waves, counters, restart
+      HKGameMode.*            Arena generation, waves, counters, restart
     UI/
-      HordeKillerHUD.*        Crosshair and on-screen counters
+      HKHUD.*                 Crosshair and on-screen counters
 ```
 
-Source files are grouped by gameplay area, with each header next to its `.cpp`. Includes are written relative to the module folder, for example `#include "Characters/HordeKillerCharacter.h"`.
+Every class written for this project is named with the Unreal type prefix followed by `HK`, such as `AHKCharacter`, and its files drop the type prefix (`HKCharacter.h`). The module itself keeps the full name, `HordeKiller`.
+
+Source files are grouped by gameplay area, with each header next to its `.cpp`. Includes are written relative to the module folder, for example `#include "Characters/HKCharacter.h"`.
 
 ### Class hierarchy
 
 ```
 ACharacter (engine)
-  AHuman                      Abstract. Health, TakeDamage, IsDead, HandleDamaged / HandleDeath hooks
-    AHordeKillerCharacter     The player
-    AHordeKillerEnemy         A horde enemy
+  AHKHuman           Abstract. Health, TakeDamage, IsDead, HandleDamaged / HandleDeath hooks
+    AHKCharacter     The player
+    AHKEnemy         A horde enemy
 ```
 
-`AHuman` owns the damage flow. Subclasses do not override `TakeDamage`; they override `HandleDamaged` (a hit they survive) and `HandleDeath` (health reached zero) to add their own reaction.
+`AHKHuman` owns the damage flow. Subclasses do not override `TakeDamage`; they override `HandleDamaged` (a hit they survive) and `HandleDeath` (health reached zero) to add their own reaction.
 
 ## How it works
 
