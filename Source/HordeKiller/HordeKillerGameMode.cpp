@@ -1,25 +1,25 @@
-#include "MyGameGameMode.h"
+#include "HordeKillerGameMode.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/StaticMeshActor.h"
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
 #include "Materials/MaterialInstanceDynamic.h"
-#include "MyGameCharacter.h"
-#include "MyGameEnemy.h"
-#include "MyGameHUD.h"
+#include "HordeKillerCharacter.h"
+#include "HordeKillerEnemy.h"
+#include "HordeKillerHUD.h"
 #include "TimerManager.h"
 
-DEFINE_LOG_CATEGORY_STATIC(LogMyGame, Log, All);
+DEFINE_LOG_CATEGORY_STATIC(LogHordeKiller, Log, All);
 
-AMyGameGameMode::AMyGameGameMode()
+AHordeKillerGameMode::AHordeKillerGameMode()
 {
-	DefaultPawnClass = AMyGameCharacter::StaticClass();
-	HUDClass = AMyGameHUD::StaticClass();
-	EnemyClass = AMyGameEnemy::StaticClass();
+	DefaultPawnClass = AHordeKillerCharacter::StaticClass();
+	HUDClass = AHordeKillerHUD::StaticClass();
+	EnemyClass = AHordeKillerEnemy::StaticClass();
 }
 
-void AMyGameGameMode::BeginPlay()
+void AHordeKillerGameMode::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -28,10 +28,10 @@ void AMyGameGameMode::BeginPlay()
 		BuildArena();
 	}
 
-	GetWorldTimerManager().SetTimer(WaveTimer, this, &AMyGameGameMode::StartNextWave, TimeBetweenWaves, false);
+	GetWorldTimerManager().SetTimer(WaveTimer, this, &AHordeKillerGameMode::StartNextWave, TimeBetweenWaves, false);
 }
 
-void AMyGameGameMode::SpawnArenaBlock(const FVector& Location, const FVector& Size, const FLinearColor& Color)
+void AHordeKillerGameMode::SpawnArenaBlock(const FVector& Location, const FVector& Size, const FLinearColor& Color)
 {
 	UStaticMesh* Cube = LoadObject<UStaticMesh>(nullptr, TEXT("/Engine/BasicShapes/Cube.Cube"));
 	AStaticMeshActor* Block = GetWorld()->SpawnActor<AStaticMeshActor>(Location, FRotator::ZeroRotator);
@@ -53,7 +53,7 @@ void AMyGameGameMode::SpawnArenaBlock(const FVector& Location, const FVector& Si
 	}
 }
 
-void AMyGameGameMode::BuildArena()
+void AHordeKillerGameMode::BuildArena()
 {
 	const float Side = ArenaHalfSize * 2.f;
 	const float FloorThickness = 100.f;
@@ -71,7 +71,7 @@ void AMyGameGameMode::BuildArena()
 	SpawnArenaBlock(FVector(0.f, -WallOffset, WallZ), FVector(Side, WallThickness, ArenaWallHeight), WallColor);
 }
 
-void AMyGameGameMode::StartNextWave()
+void AHordeKillerGameMode::StartNextWave()
 {
 	if (bGameOver || !EnemyClass)
 	{
@@ -100,29 +100,29 @@ void AMyGameGameMode::StartNextWave()
 		Location.Y = FMath::Clamp(Location.Y, -Limit, Limit);
 		Location.Z = ArenaFloorZ + 100.f;
 
-		if (GetWorld()->SpawnActor<AMyGameEnemy>(EnemyClass, Location, FRotator::ZeroRotator, Params))
+		if (GetWorld()->SpawnActor<AHordeKillerEnemy>(EnemyClass, Location, FRotator::ZeroRotator, Params))
 		{
 			++Spawned;
 		}
 	}
 
 	EnemiesAlive += Spawned;
-	UE_LOG(LogMyGame, Log, TEXT("Wave %d started: %d enemies spawned around %s"), CurrentWave, Spawned, *Center.ToString());
+	UE_LOG(LogHordeKiller, Log, TEXT("Wave %d started: %d enemies spawned around %s"), CurrentWave, Spawned, *Center.ToString());
 }
 
-void AMyGameGameMode::NotifyEnemyKilled()
+void AHordeKillerGameMode::NotifyEnemyKilled()
 {
 	++Kills;
 	EnemiesAlive = FMath::Max(0, EnemiesAlive - 1);
 
 	if (EnemiesAlive == 0 && !bGameOver)
 	{
-		UE_LOG(LogMyGame, Log, TEXT("Wave %d cleared (%d kills)"), CurrentWave, Kills);
-		GetWorldTimerManager().SetTimer(WaveTimer, this, &AMyGameGameMode::StartNextWave, TimeBetweenWaves, false);
+		UE_LOG(LogHordeKiller, Log, TEXT("Wave %d cleared (%d kills)"), CurrentWave, Kills);
+		GetWorldTimerManager().SetTimer(WaveTimer, this, &AHordeKillerGameMode::StartNextWave, TimeBetweenWaves, false);
 	}
 }
 
-void AMyGameGameMode::NotifyPlayerDied()
+void AHordeKillerGameMode::NotifyPlayerDied()
 {
 	if (bGameOver)
 	{
@@ -130,12 +130,12 @@ void AMyGameGameMode::NotifyPlayerDied()
 	}
 
 	bGameOver = true;
-	UE_LOG(LogMyGame, Log, TEXT("Player died on wave %d with %d kills"), CurrentWave, Kills);
+	UE_LOG(LogHordeKiller, Log, TEXT("Player died on wave %d with %d kills"), CurrentWave, Kills);
 	GetWorldTimerManager().ClearTimer(WaveTimer);
-	GetWorldTimerManager().SetTimer(RestartTimer, this, &AMyGameGameMode::RestartLevel, RestartDelay, false);
+	GetWorldTimerManager().SetTimer(RestartTimer, this, &AHordeKillerGameMode::RestartLevel, RestartDelay, false);
 }
 
-void AMyGameGameMode::RestartLevel()
+void AHordeKillerGameMode::RestartLevel()
 {
 	UGameplayStatics::OpenLevel(this, FName(*UGameplayStatics::GetCurrentLevelName(this)));
 }

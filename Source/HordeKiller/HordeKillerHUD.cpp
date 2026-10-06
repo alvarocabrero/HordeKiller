@@ -1,11 +1,11 @@
-#include "MyGameHUD.h"
+#include "HordeKillerHUD.h"
 #include "Engine/Canvas.h"
 #include "Engine/Engine.h"
 #include "Engine/Font.h"
-#include "MyGameCharacter.h"
-#include "MyGameGameMode.h"
+#include "HordeKillerCharacter.h"
+#include "HordeKillerGameMode.h"
 
-void AMyGameHUD::DrawHUD()
+void AHordeKillerHUD::DrawHUD()
 {
 	Super::DrawHUD();
 
@@ -24,14 +24,14 @@ void AMyGameHUD::DrawHUD()
 	UFont* Font = GEngine ? GEngine->GetMediumFont() : nullptr;
 	const float TextScale = 1.5f;
 
-	if (const AMyGameCharacter* Player = Cast<AMyGameCharacter>(GetOwningPawn()))
+	if (const AHordeKillerCharacter* Player = Cast<AHordeKillerCharacter>(GetOwningPawn()))
 	{
 		const FString HealthText = FString::Printf(TEXT("Health: %d / %d"),
 			FMath::CeilToInt(Player->GetHealth()), FMath::CeilToInt(Player->GetMaxHealth()));
 		DrawText(HealthText, FLinearColor::White, 40.f, Canvas->ClipY - 70.f, Font, TextScale);
 	}
 
-	if (const AMyGameGameMode* GameMode = GetWorld()->GetAuthGameMode<AMyGameGameMode>())
+	if (const AHordeKillerGameMode* GameMode = GetWorld()->GetAuthGameMode<AHordeKillerGameMode>())
 	{
 		const FString WaveText = FString::Printf(TEXT("Wave: %d   Enemies: %d   Kills: %d"),
 			GameMode->GetCurrentWave(), GameMode->GetEnemiesAlive(), GameMode->GetKills());

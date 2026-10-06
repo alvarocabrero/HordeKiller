@@ -2,18 +2,18 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
-#include "MyGameGameMode.generated.h"
+#include "HordeKillerGameMode.generated.h"
 
-class AMyGameEnemy;
+class AHordeKillerEnemy;
 
 /** Runs the horde loop: builds the arena, spawns waves of enemies and tracks kills. */
 UCLASS()
-class MYGAME_API AMyGameGameMode : public AGameModeBase
+class HORDEKILLER_API AHordeKillerGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
 
 public:
-	AMyGameGameMode();
+	AHordeKillerGameMode();
 
 	void NotifyEnemyKilled();
 	void NotifyPlayerDied();
@@ -34,7 +34,7 @@ protected:
 	void RestartLevel();
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Waves")
-	TSubclassOf<AMyGameEnemy> EnemyClass;
+	TSubclassOf<AHordeKillerEnemy> EnemyClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Waves")
 	int32 FirstWaveEnemies = 6;

@@ -1,12 +1,12 @@
 using UnrealBuildTool;
 
-public class MyGameTarget : TargetRules
+public class HordeKillerTarget : TargetRules
 {
-	public MyGameTarget(TargetInfo Target) : base(Target)
+	public HordeKillerTarget(TargetInfo Target) : base(Target)
 	{
 		Type = TargetType.Game;
 		DefaultBuildSettings = BuildSettingsVersion.V5;
 		IncludeOrderVersion = EngineIncludeOrderVersion.Latest;
-		ExtraModuleNames.Add("MyGame");
+		ExtraModuleNames.Add("HordeKiller");
 	}
 }

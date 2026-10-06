@@ -1,11 +1,11 @@
-#include "MyGameProjectile.h"
+#include "HordeKillerProjectile.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
 #include "Kismet/GameplayStatics.h"
-#include "MyGameEnemy.h"
+#include "HordeKillerEnemy.h"
 #include "UObject/ConstructorHelpers.h"
 
-AMyGameProjectile::AMyGameProjectile()
+AHordeKillerProjectile::AHordeKillerProjectile()
 {
 	PrimaryActorTick.bCanEverTick = true;
 	InitialLifeSpan = 5.f;
@@ -26,26 +26,26 @@ AMyGameProjectile::AMyGameProjectile()
 	Mesh->BodyInstance.SetMassOverride(2.f);
 	// Fast and small: continuous collision detection avoids tunnelling through enemies.
 	Mesh->BodyInstance.bUseCCD = true;
-	Mesh->OnComponentHit.AddDynamic(this, &AMyGameProjectile::OnHit);
+	Mesh->OnComponentHit.AddDynamic(this, &AHordeKillerProjectile::OnHit);
 }
 
-void AMyGameProjectile::Launch(const FVector& Direction)
+void AHordeKillerProjectile::Launch(const FVector& Direction)
 {
 	const FVector LaunchVelocity = Direction.GetSafeNormal() * LaunchSpeed;
 	Mesh->AddImpulse(LaunchVelocity, NAME_None, true);
 	PreHitVelocity = LaunchVelocity;
 }
 
-void AMyGameProjectile::Tick(float DeltaSeconds)
+void AHordeKillerProjectile::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 	PreHitVelocity = Mesh->GetPhysicsLinearVelocity();
 }
 
-void AMyGameProjectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
+void AHordeKillerProjectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	FVector NormalImpulse, const FHitResult& Hit)
 {
-	AMyGameEnemy* Enemy = Cast<AMyGameEnemy>(OtherActor);
+	AHordeKillerEnemy* Enemy = Cast<AHordeKillerEnemy>(OtherActor);
 	if (!Enemy || PreHitVelocity.Size() < MinDamageSpeed)
 	{
 		// Anything else (floor, walls, spent shots) is left to the physics simulation.

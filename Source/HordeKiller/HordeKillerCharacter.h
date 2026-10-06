@@ -2,9 +2,9 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "MyGameCharacter.generated.h"
+#include "HordeKillerCharacter.generated.h"
 
-class AMyGameProjectile;
+class AHordeKillerProjectile;
 class UCameraComponent;
 class UInputAction;
 class UInputMappingContext;
@@ -13,12 +13,12 @@ struct FInputActionValue;
 
 /** First-person shooter character that fires physics projectiles, using Enhanced Input. */
 UCLASS()
-class MYGAME_API AMyGameCharacter : public ACharacter
+class HORDEKILLER_API AHordeKillerCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
 public:
-	AMyGameCharacter();
+	AHordeKillerCharacter();
 
 	virtual float TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent, AController* EventInstigator,
 		AActor* DamageCauser) override;
@@ -47,7 +47,7 @@ protected:
 	TObjectPtr<UStaticMeshComponent> GunMesh;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
-	TSubclassOf<AMyGameProjectile> ProjectileClass;
+	TSubclassOf<AHordeKillerProjectile> ProjectileClass;
 
 	// Seconds between shots while the fire button is held.
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")

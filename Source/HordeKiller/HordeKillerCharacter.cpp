@@ -1,4 +1,4 @@
-#include "MyGameCharacter.h"
+#include "HordeKillerCharacter.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -12,11 +12,11 @@
 #include "InputActionValue.h"
 #include "InputMappingContext.h"
 #include "InputModifiers.h"
-#include "MyGameGameMode.h"
-#include "MyGameProjectile.h"
+#include "HordeKillerGameMode.h"
+#include "HordeKillerProjectile.h"
 #include "UObject/ConstructorHelpers.h"
 
-AMyGameCharacter::AMyGameCharacter()
+AHordeKillerCharacter::AHordeKillerCharacter()
 {
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.f);
 
@@ -50,16 +50,16 @@ AMyGameCharacter::AMyGameCharacter()
 		GunMesh->SetStaticMesh(CubeMesh.Object);
 	}
 
-	ProjectileClass = AMyGameProjectile::StaticClass();
+	ProjectileClass = AHordeKillerProjectile::StaticClass();
 }
 
-void AMyGameCharacter::BeginPlay()
+void AHordeKillerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 	Health = MaxHealth;
 }
 
-void AMyGameCharacter::CreateDefaultInputAssets()
+void AHordeKillerCharacter::CreateDefaultInputAssets()
 {
 	if (!MoveAction)
 	{
@@ -120,7 +120,7 @@ void AMyGameCharacter::CreateDefaultInputAssets()
 	Context->MapKey(FireAction, EKeys::LeftMouseButton);
 }
 
-void AMyGameCharacter::NotifyControllerChanged()
+void AHordeKillerCharacter::NotifyControllerChanged()
 {
 	Super::NotifyControllerChanged();
 
@@ -135,7 +135,7 @@ void AMyGameCharacter::NotifyControllerChanged()
 	}
 }
 
-void AMyGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+void AHordeKillerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
@@ -145,14 +145,14 @@ void AMyGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 	{
 		Input->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
 		Input->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
-		Input->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AMyGameCharacter::Move);
-		Input->BindAction(LookAction, ETriggerEvent::Triggered, this, &AMyGameCharacter::Look);
+		Input->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AHordeKillerCharacter::Move);
+		Input->BindAction(LookAction, ETriggerEvent::Triggered, this, &AHordeKillerCharacter::Look);
 		// Triggered fires every frame while held; FireInterval limits the actual rate.
-		Input->BindAction(FireAction, ETriggerEvent::Triggered, this, &AMyGameCharacter::Fire);
+		Input->BindAction(FireAction, ETriggerEvent::Triggered, this, &AHordeKillerCharacter::Fire);
 	}
 }
 
-void AMyGameCharacter::Move(const FInputActionValue& Value)
+void AHordeKillerCharacter::Move(const FInputActionValue& Value)
 {
 	const FVector2D Axis = Value.Get<FVector2D>();
 	if (!Controller)
@@ -164,14 +164,14 @@ void AMyGameCharacter::Move(const FInputActionValue& Value)
 	AddMovementInput(GetActorRightVector(), Axis.X);
 }
 
-void AMyGameCharacter::Look(const FInputActionValue& Value)
+void AHordeKillerCharacter::Look(const FInputActionValue& Value)
 {
 	const FVector2D Axis = Value.Get<FVector2D>();
 	AddControllerYawInput(Axis.X);
 	AddControllerPitchInput(Axis.Y);
 }
 
-void AMyGameCharacter::Fire()
+void AHordeKillerCharacter::Fire()
 {
 	UWorld* World = GetWorld();
 	if (bDead || !ProjectileClass || !World)
@@ -195,14 +195,14 @@ void AMyGameCharacter::Fire()
 	Params.Instigator = this;
 	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
-	if (AMyGameProjectile* Projectile =
-			World->SpawnActor<AMyGameProjectile>(ProjectileClass, SpawnLocation, AimRotation, Params))
+	if (AHordeKillerProjectile* Projectile =
+			World->SpawnActor<AHordeKillerProjectile>(ProjectileClass, SpawnLocation, AimRotation, Params))
 	{
 		Projectile->Launch(AimDirection);
 	}
 }
 
-float AMyGameCharacter::TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent, AController* EventInstigator,
+float AHordeKillerCharacter::TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent, AController* EventInstigator,
 	AActor* DamageCauser)
 {
 	const float Applied = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
@@ -220,7 +220,7 @@ float AMyGameCharacter::TakeDamage(float DamageAmount, const FDamageEvent& Damag
 		{
 			DisableInput(PC);
 		}
-		if (AMyGameGameMode* GameMode = GetWorld()->GetAuthGameMode<AMyGameGameMode>())
+		if (AHordeKillerGameMode* GameMode = GetWorld()->GetAuthGameMode<AHordeKillerGameMode>())
 		{
 			GameMode->NotifyPlayerDied();
 		}

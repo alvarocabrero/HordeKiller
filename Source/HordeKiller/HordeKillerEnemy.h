@@ -2,19 +2,19 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "MyGameEnemy.generated.h"
+#include "HordeKillerEnemy.generated.h"
 
 class UMaterialInstanceDynamic;
 class UStaticMeshComponent;
 
 /** Horde enemy: runs straight at the player, hits on contact and dies after two projectile hits. */
 UCLASS()
-class MYGAME_API AMyGameEnemy : public ACharacter
+class HORDEKILLER_API AHordeKillerEnemy : public ACharacter
 {
 	GENERATED_BODY()
 
 public:
-	AMyGameEnemy();
+	AHordeKillerEnemy();
 
 	virtual void Tick(float DeltaSeconds) override;
 	virtual float TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent, AController* EventInstigator,

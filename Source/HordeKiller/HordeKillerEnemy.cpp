@@ -1,15 +1,15 @@
-#include "MyGameEnemy.h"
+#include "HordeKillerEnemy.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Materials/MaterialInstanceDynamic.h"
-#include "MyGameCharacter.h"
-#include "MyGameGameMode.h"
+#include "HordeKillerCharacter.h"
+#include "HordeKillerGameMode.h"
 #include "UObject/ConstructorHelpers.h"
 
-AMyGameEnemy::AMyGameEnemy()
+AHordeKillerEnemy::AHordeKillerEnemy()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -40,7 +40,7 @@ AMyGameEnemy::AMyGameEnemy()
 	bUseControllerRotationYaw = false;
 }
 
-void AMyGameEnemy::BeginPlay()
+void AHordeKillerEnemy::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -54,7 +54,7 @@ void AMyGameEnemy::BeginPlay()
 	}
 }
 
-void AMyGameEnemy::Tick(float DeltaSeconds)
+void AHordeKillerEnemy::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
@@ -63,7 +63,7 @@ void AMyGameEnemy::Tick(float DeltaSeconds)
 		return;
 	}
 
-	const AMyGameCharacter* Player = Cast<AMyGameCharacter>(UGameplayStatics::GetPlayerPawn(this, 0));
+	const AHordeKillerCharacter* Player = Cast<AHordeKillerCharacter>(UGameplayStatics::GetPlayerPawn(this, 0));
 	if (!Player || Player->IsDead())
 	{
 		return;
@@ -83,11 +83,11 @@ void AMyGameEnemy::Tick(float DeltaSeconds)
 	if (Distance <= AttackRange && Now - LastAttackTime >= AttackCooldown)
 	{
 		LastAttackTime = Now;
-		UGameplayStatics::ApplyDamage(const_cast<AMyGameCharacter*>(Player), AttackDamage, GetController(), this, nullptr);
+		UGameplayStatics::ApplyDamage(const_cast<AHordeKillerCharacter*>(Player), AttackDamage, GetController(), this, nullptr);
 	}
 }
 
-float AMyGameEnemy::TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent, AController* EventInstigator,
+float AHordeKillerEnemy::TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent, AController* EventInstigator,
 	AActor* DamageCauser)
 {
 	const float Applied = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
@@ -108,11 +108,11 @@ float AMyGameEnemy::TakeDamage(float DamageAmount, const FDamageEvent& DamageEve
 	return Applied;
 }
 
-void AMyGameEnemy::Die()
+void AHordeKillerEnemy::Die()
 {
 	bDead = true;
 
-	if (AMyGameGameMode* GameMode = GetWorld()->GetAuthGameMode<AMyGameGameMode>())
+	if (AHordeKillerGameMode* GameMode = GetWorld()->GetAuthGameMode<AHordeKillerGameMode>())
 	{
 		GameMode->NotifyEnemyKilled();
 	}

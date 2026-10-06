@@ -2,18 +2,18 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "MyGameProjectile.generated.h"
+#include "HordeKillerProjectile.generated.h"
 
 class UStaticMeshComponent;
 
 /** Physics-driven projectile: a simulated rigid body launched with an impulse. */
 UCLASS()
-class MYGAME_API AMyGameProjectile : public AActor
+class HORDEKILLER_API AHordeKillerProjectile : public AActor
 {
 	GENERATED_BODY()
 
 public:
-	AMyGameProjectile();
+	AHordeKillerProjectile();
 
 	/** Launches the projectile along Direction using a physics impulse. */
 	void Launch(const FVector& Direction);
