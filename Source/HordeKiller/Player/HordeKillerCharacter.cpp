@@ -1,6 +1,6 @@
 // Copyright (c) 2026 Álvaro Cabrero Barros. Licensed under the MIT License. See LICENSE in the repository root.
 
-#include "HordeKillerCharacter.h"
+#include "Player/HordeKillerCharacter.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -14,8 +14,8 @@
 #include "InputActionValue.h"
 #include "InputMappingContext.h"
 #include "InputModifiers.h"
-#include "HordeKillerGameMode.h"
-#include "HordeKillerProjectile.h"
+#include "Game/HordeKillerGameMode.h"
+#include "Weapons/HordeKillerProjectile.h"
 #include "UObject/ConstructorHelpers.h"
 
 AHordeKillerCharacter::AHordeKillerCharacter()

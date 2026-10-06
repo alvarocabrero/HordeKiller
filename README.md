@@ -119,12 +119,20 @@ Source/
   HordeKillerEditor.Target.cs Build target for the editor
   HordeKiller/
     HordeKiller.Build.cs      Module build rules and dependencies
-    HordeKillerCharacter.*    Player: movement, input, weapon, health
-    HordeKillerProjectile.*   Physics projectile
-    HordeKillerEnemy.*        Enemy: chase, attack, health
-    HordeKillerGameMode.*     Arena generation, waves, counters, restart
-    HordeKillerHUD.*          Crosshair and on-screen counters
+    HordeKiller.h / .cpp      Module registration
+    Player/
+      HordeKillerCharacter.*  Player: movement, input, weapon, health
+    Weapons/
+      HordeKillerProjectile.* Physics projectile
+    Enemies/
+      HordeKillerEnemy.*      Enemy: chase, attack, health
+    Game/
+      HordeKillerGameMode.*   Arena generation, waves, counters, restart
+    UI/
+      HordeKillerHUD.*        Crosshair and on-screen counters
 ```
+
+Source files are grouped by gameplay area, with each header next to its `.cpp`. Includes are written relative to the module folder, for example `#include "Player/HordeKillerCharacter.h"`.
 
 ## How it works
 

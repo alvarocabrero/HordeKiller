@@ -1,11 +1,11 @@
 // Copyright (c) 2026 Álvaro Cabrero Barros. Licensed under the MIT License. See LICENSE in the repository root.
 
-#include "HordeKillerHUD.h"
+#include "UI/HordeKillerHUD.h"
 #include "Engine/Canvas.h"
 #include "Engine/Engine.h"
 #include "Engine/Font.h"
-#include "HordeKillerCharacter.h"
-#include "HordeKillerGameMode.h"
+#include "Player/HordeKillerCharacter.h"
+#include "Game/HordeKillerGameMode.h"
 
 void AHordeKillerHUD::DrawHUD()
 {

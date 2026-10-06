@@ -1,10 +1,10 @@
 // Copyright (c) 2026 Álvaro Cabrero Barros. Licensed under the MIT License. See LICENSE in the repository root.
 
-#include "HordeKillerProjectile.h"
+#include "Weapons/HordeKillerProjectile.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
 #include "Kismet/GameplayStatics.h"
-#include "HordeKillerEnemy.h"
+#include "Enemies/HordeKillerEnemy.h"
 #include "UObject/ConstructorHelpers.h"
 
 AHordeKillerProjectile::AHordeKillerProjectile()

@@ -1,14 +1,14 @@
 // Copyright (c) 2026 Álvaro Cabrero Barros. Licensed under the MIT License. See LICENSE in the repository root.
 
-#include "HordeKillerEnemy.h"
+#include "Enemies/HordeKillerEnemy.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Materials/MaterialInstanceDynamic.h"
-#include "HordeKillerCharacter.h"
-#include "HordeKillerGameMode.h"
+#include "Player/HordeKillerCharacter.h"
+#include "Game/HordeKillerGameMode.h"
 #include "UObject/ConstructorHelpers.h"
 
 AHordeKillerEnemy::AHordeKillerEnemy()

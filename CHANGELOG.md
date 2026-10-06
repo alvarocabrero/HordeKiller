@@ -9,6 +9,10 @@ All notable changes to this project are listed here. The format follows [Keep a 
 - MIT license, README, contributing guide and this changelog.
 - Detailed comments on all source and configuration files.
 
+### Changed
+
+- Source files are grouped into `Player`, `Weapons`, `Enemies`, `Game` and `UI` folders. Class names are unchanged.
+
 ## 0.1.0 - 2026-10-06
 
 ### Added

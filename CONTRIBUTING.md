@@ -25,6 +25,7 @@ Follow the steps in the [README](README.md#getting-started) to clone, generate p
 - In `.cpp` files, comment the reason behind anything that is not obvious from the code itself.
 - Expose gameplay values as `UPROPERTY(EditAnywhere)` instead of hard-coding them, and list them in the README's tuning tables.
 - Start each source file with the copyright line used by the existing files.
+- Put new classes in the folder for their gameplay area (`Player`, `Weapons`, `Enemies`, `Game`, `UI`), keeping the header next to its `.cpp`, and include them by their path from the module folder.
 
 ## What not to commit
 

@@ -1,15 +1,15 @@
 // Copyright (c) 2026 Álvaro Cabrero Barros. Licensed under the MIT License. See LICENSE in the repository root.
 
-#include "HordeKillerGameMode.h"
+#include "Game/HordeKillerGameMode.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
 #include "Engine/StaticMeshActor.h"
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
 #include "Materials/MaterialInstanceDynamic.h"
-#include "HordeKillerCharacter.h"
-#include "HordeKillerEnemy.h"
-#include "HordeKillerHUD.h"
+#include "Player/HordeKillerCharacter.h"
+#include "Enemies/HordeKillerEnemy.h"
+#include "UI/HordeKillerHUD.h"
 #include "TimerManager.h"
 
 // Log category for gameplay events (waves, deaths). Filter the Output Log by "LogHordeKiller" to see them.
