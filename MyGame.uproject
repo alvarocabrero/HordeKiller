@@ -4,7 +4,7 @@
 	"Category": "",
 	"Description": "",
 	"Modules": [
-		{ "Name": "MiJuego", "Type": "Runtime", "LoadingPhase": "Default", "AdditionalDependencies": [ "Engine" ] }
+		{ "Name": "MyGame", "Type": "Runtime", "LoadingPhase": "Default", "AdditionalDependencies": [ "Engine" ] }
 	],
 	"Plugins": [
 		{ "Name": "EnhancedInput", "Enabled": true },

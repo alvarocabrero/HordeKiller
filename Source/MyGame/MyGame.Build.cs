@@ -1,8 +1,8 @@
 using UnrealBuildTool;
 
-public class MiJuego : ModuleRules
+public class MyGame : ModuleRules
 {
-	public MiJuego(ReadOnlyTargetRules Target) : base(Target)
+	public MyGame(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput" });

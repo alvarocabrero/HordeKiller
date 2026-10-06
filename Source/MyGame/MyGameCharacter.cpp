@@ -1,4 +1,4 @@
-#include "MiJuegoCharacter.h"
+#include "MyGameCharacter.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "EnhancedInputComponent.h"
@@ -7,11 +7,11 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "InputActionValue.h"
 
-AMiJuegoCharacter::AMiJuegoCharacter()
+AMyGameCharacter::AMyGameCharacter()
 {
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.f);
 
-	// El personaje gira hacia donde se mueve, no con la cámara.
+	// The character turns toward its movement direction, not with the camera.
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
@@ -34,7 +34,7 @@ AMiJuegoCharacter::AMiJuegoCharacter()
 	FollowCamera->bUsePawnControlRotation = false;
 }
 
-void AMiJuegoCharacter::BeginPlay()
+void AMyGameCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -51,7 +51,7 @@ void AMiJuegoCharacter::BeginPlay()
 	}
 }
 
-void AMiJuegoCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+void AMyGameCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
@@ -64,16 +64,16 @@ void AMiJuegoCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		}
 		if (MoveAction)
 		{
-			Input->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AMiJuegoCharacter::Move);
+			Input->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AMyGameCharacter::Move);
 		}
 		if (LookAction)
 		{
-			Input->BindAction(LookAction, ETriggerEvent::Triggered, this, &AMiJuegoCharacter::Look);
+			Input->BindAction(LookAction, ETriggerEvent::Triggered, this, &AMyGameCharacter::Look);
 		}
 	}
 }
 
-void AMiJuegoCharacter::Move(const FInputActionValue& Value)
+void AMyGameCharacter::Move(const FInputActionValue& Value)
 {
 	const FVector2D Axis = Value.Get<FVector2D>();
 	if (!Controller)
@@ -89,7 +89,7 @@ void AMiJuegoCharacter::Move(const FInputActionValue& Value)
 	AddMovementInput(Right, Axis.X);
 }
 
-void AMiJuegoCharacter::Look(const FInputActionValue& Value)
+void AMyGameCharacter::Look(const FInputActionValue& Value)
 {
 	const FVector2D Axis = Value.Get<FVector2D>();
 	AddControllerYawInput(Axis.X);

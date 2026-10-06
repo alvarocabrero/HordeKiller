@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "MiJuegoCharacter.generated.h"
+#include "MyGameCharacter.generated.h"
 
 class USpringArmComponent;
 class UCameraComponent;
@@ -10,14 +10,14 @@ class UInputMappingContext;
 class UInputAction;
 struct FInputActionValue;
 
-/** Personaje en tercera persona con cámara orbital y Enhanced Input. */
+/** Third-person character with an orbit camera and Enhanced Input. */
 UCLASS()
-class MIJUEGO_API AMiJuegoCharacter : public ACharacter
+class MYGAME_API AMyGameCharacter : public ACharacter
 {
 	GENERATED_BODY()
 
 public:
-	AMiJuegoCharacter();
+	AMyGameCharacter();
 
 protected:
 	virtual void BeginPlay() override;
@@ -32,7 +32,7 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	TObjectPtr<UCameraComponent> FollowCamera;
 
-	// Asigna estos assets en un Blueprint hijo del personaje.
+	// Assign these assets in a child Blueprint of the character.
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputMappingContext> DefaultMappingContext;
 
