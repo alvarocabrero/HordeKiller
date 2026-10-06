@@ -1,6 +1,6 @@
 // Copyright (c) 2026 Álvaro Cabrero Barros. Licensed under the MIT License. See LICENSE in the repository root.
 
-#include "Player/HordeKillerCharacter.h"
+#include "Characters/HordeKillerCharacter.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -65,14 +65,9 @@ AHordeKillerCharacter::AHordeKillerCharacter()
 
 	// Default to the C++ projectile; a child Blueprint can point this at its own projectile class.
 	ProjectileClass = AHordeKillerProjectile::StaticClass();
-}
 
-void AHordeKillerCharacter::BeginPlay()
-{
-	Super::BeginPlay();
-
-	// Read MaxHealth here rather than in the constructor so values edited in a child Blueprint apply.
-	Health = MaxHealth;
+	// Starting health, inherited from AHuman. Each enemy attack removes 10 by default.
+	MaxHealth = 100.f;
 }
 
 void AHordeKillerCharacter::CreateDefaultInputAssets()
@@ -227,7 +222,7 @@ void AHordeKillerCharacter::Look(const FInputActionValue& Value)
 void AHordeKillerCharacter::Fire()
 {
 	UWorld* World = GetWorld();
-	if (bDead || !ProjectileClass || !World)
+	if (IsDead() || !ProjectileClass || !World)
 	{
 		return;
 	}
@@ -263,33 +258,20 @@ void AHordeKillerCharacter::Fire()
 	}
 }
 
-float AHordeKillerCharacter::TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent, AController* EventInstigator,
-	AActor* DamageCauser)
+void AHordeKillerCharacter::HandleDeath()
 {
-	// The base class decides whether the damage is accepted at all and returns the final amount.
-	const float Applied = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
-	if (bDead || Applied <= 0.f)
+	Super::HandleDeath();
+
+	// Freeze the player in place: no more movement and no more input, including firing.
+	GetCharacterMovement()->DisableMovement();
+	if (APlayerController* PC = Cast<APlayerController>(GetController()))
 	{
-		return 0.f;
+		DisableInput(PC);
 	}
 
-	Health = FMath::Max(0.f, Health - Applied);
-	if (Health <= 0.f)
+	// The game mode shows the game-over state and restarts the level after a delay.
+	if (AHordeKillerGameMode* GameMode = GetWorld()->GetAuthGameMode<AHordeKillerGameMode>())
 	{
-		bDead = true;
-
-		// Freeze the player in place: no more movement and no more input, including firing.
-		GetCharacterMovement()->DisableMovement();
-		if (APlayerController* PC = Cast<APlayerController>(GetController()))
-		{
-			DisableInput(PC);
-		}
-
-		// The game mode shows the game-over state and restarts the level after a delay.
-		if (AHordeKillerGameMode* GameMode = GetWorld()->GetAuthGameMode<AHordeKillerGameMode>())
-		{
-			GameMode->NotifyPlayerDied();
-		}
+		GameMode->NotifyPlayerDied();
 	}
-	return Applied;
 }

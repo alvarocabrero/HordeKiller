@@ -4,7 +4,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
 #include "Kismet/GameplayStatics.h"
-#include "Enemies/HordeKillerEnemy.h"
+#include "Characters/HordeKillerEnemy.h"
 #include "UObject/ConstructorHelpers.h"
 
 AHordeKillerProjectile::AHordeKillerProjectile()

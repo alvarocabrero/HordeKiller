@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Character.h"
+#include "Characters/Human.h"
 #include "HordeKillerCharacter.generated.h"
 
 class AHordeKillerProjectile;
@@ -20,10 +20,11 @@ struct FInputActionValue;
  * the editor, the input actions and the key mappings are built in code the first time they are needed.
  * Any of them can be replaced by assigning a real asset to the matching property in a child Blueprint.
  *
- * The character has health, takes damage from enemies and notifies the game mode when it dies.
+ * Health, taking damage and the dead state are inherited from AHuman. This class adds what dying
+ * means for the player: freezing in place and telling the game mode that the game is over.
  */
 UCLASS()
-class HORDEKILLER_API AHordeKillerCharacter : public ACharacter
+class HORDEKILLER_API AHordeKillerCharacter : public AHuman
 {
 	GENERATED_BODY()
 
@@ -31,30 +32,9 @@ public:
 	/** Creates the camera and weapon components and configures first-person movement. */
 	AHordeKillerCharacter();
 
-	/**
-	 * Applies incoming damage and handles death.
-	 *
-	 * @param DamageAmount    Raw damage requested by the caller.
-	 * @param DamageEvent     Extra data describing the kind of damage.
-	 * @param EventInstigator Controller responsible for the damage (the enemy's AI controller).
-	 * @param DamageCauser    Actor that dealt the damage (the enemy).
-	 * @return The damage actually applied, or 0 if it was ignored.
-	 */
-	virtual float TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent, AController* EventInstigator,
-		AActor* DamageCauser) override;
-
-	/** @return Current health, between 0 and MaxHealth. */
-	float GetHealth() const { return Health; }
-
-	/** @return Health the character starts with. */
-	float GetMaxHealth() const { return MaxHealth; }
-
-	/** @return True once health has reached zero. */
-	bool IsDead() const { return bDead; }
-
 protected:
-	/** Fills health once the character is in the world. */
-	virtual void BeginPlay() override;
+	/** Stops the player's movement and input and notifies the game mode. Called once by AHuman when health reaches zero. */
+	virtual void HandleDeath() override;
 
 	/** Registers the input mapping context with the local player whenever a player controller takes over. */
 	virtual void NotifyControllerChanged() override;
@@ -110,10 +90,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
 	float MuzzleDistance = 100.f;
 
-	/** Health the character starts with. Each enemy attack removes 10 by default. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Health")
-	float MaxHealth = 100.f;
-
 	/** Optional mapping context asset. If left empty, default key bindings are created in code. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	TObjectPtr<UInputMappingContext> DefaultMappingContext;
@@ -135,12 +111,6 @@ protected:
 	TObjectPtr<UInputAction> FireAction;
 
 private:
-	/** Current health. Set from MaxHealth in BeginPlay. */
-	float Health = 0.f;
-
 	/** World time of the last shot, in seconds. Starts far in the past so the first shot is immediate. */
 	float LastFireTime = -1000.f;
-
-	/** True once health has reached zero. Blocks firing and further damage. */
-	bool bDead = false;
 };

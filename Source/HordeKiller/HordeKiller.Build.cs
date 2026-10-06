@@ -13,9 +13,9 @@ public class HordeKiller : ModuleRules
 		// standard setting for game modules and keeps compile times short.
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
-		// Source files live in subfolders by gameplay area (Player, Weapons, Enemies, Game, UI). Adding
+		// Source files live in subfolders by gameplay area (Characters, Weapons, Game, UI). Adding
 		// the module folder itself to the include paths lets every file include the others by their
-		// path from here, for example "Player/HordeKillerCharacter.h". Without this, only a file's own
+		// path from here, for example "Characters/HordeKillerCharacter.h". Without this, only a file's own
 		// folder would be searched and those includes would not resolve.
 		PublicIncludePaths.Add(ModuleDirectory);
 

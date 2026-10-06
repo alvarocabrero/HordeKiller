@@ -1,13 +1,13 @@
 // Copyright (c) 2026 Álvaro Cabrero Barros. Licensed under the MIT License. See LICENSE in the repository root.
 
-#include "Enemies/HordeKillerEnemy.h"
+#include "Characters/HordeKillerEnemy.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Materials/MaterialInstanceDynamic.h"
-#include "Player/HordeKillerCharacter.h"
+#include "Characters/HordeKillerCharacter.h"
 #include "Game/HordeKillerGameMode.h"
 #include "UObject/ConstructorHelpers.h"
 
@@ -52,15 +52,18 @@ AHordeKillerEnemy::AHordeKillerEnemy()
 
 	// Rotation comes from movement (above), not from the AI controller.
 	bUseControllerRotationYaw = false;
+
+	// Starting health, inherited from AHuman. Each projectile deals 1 damage by default, so 2 means two
+	// shots to kill.
+	MaxHealth = 2.f;
 }
 
 void AHordeKillerEnemy::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Read the tunable properties here rather than in the constructor so that values changed in a child
-	// Blueprint or on a placed instance are respected.
-	Health = MaxHealth;
+	// Read the tunable property here rather than in the constructor so that values changed in a child
+	// Blueprint or on a placed instance are respected. Health is initialised by AHuman.
 	GetCharacterMovement()->MaxWalkSpeed = MoveSpeed;
 
 	// A dynamic material instance lets this enemy change colour without affecting the others. The
@@ -76,7 +79,7 @@ void AHordeKillerEnemy::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	if (bDead)
+	if (IsDead())
 	{
 		return;
 	}
@@ -114,33 +117,20 @@ void AHordeKillerEnemy::Tick(float DeltaSeconds)
 	}
 }
 
-float AHordeKillerEnemy::TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent, AController* EventInstigator,
-	AActor* DamageCauser)
+void AHordeKillerEnemy::HandleDamaged(float DamageApplied)
 {
-	// The base class decides whether the damage is accepted at all and returns the final amount.
-	const float Applied = Super::TakeDamage(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
-	if (bDead || Applied <= 0.f)
-	{
-		return 0.f;
-	}
+	Super::HandleDamaged(DamageApplied);
 
-	Health -= Applied;
-	if (Health <= 0.f)
+	// Survived the hit: show that this enemy has been wounded.
+	if (BodyMaterial)
 	{
-		Die();
-	}
-	else if (BodyMaterial)
-	{
-		// Survived the hit: show that this enemy is one shot away from dying.
 		BodyMaterial->SetVectorParameterValue(TEXT("Color"), WoundedColor);
 	}
-	return Applied;
 }
 
-void AHordeKillerEnemy::Die()
+void AHordeKillerEnemy::HandleDeath()
 {
-	// Set first so that any further damage arriving this frame is ignored and the kill is counted once.
-	bDead = true;
+	Super::HandleDeath();
 
 	// The game mode keeps the kill count and decides when the wave is over.
 	if (AHordeKillerGameMode* GameMode = GetWorld()->GetAuthGameMode<AHordeKillerGameMode>())

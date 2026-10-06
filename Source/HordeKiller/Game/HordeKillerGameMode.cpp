@@ -7,8 +7,8 @@
 #include "Engine/World.h"
 #include "Kismet/GameplayStatics.h"
 #include "Materials/MaterialInstanceDynamic.h"
-#include "Player/HordeKillerCharacter.h"
-#include "Enemies/HordeKillerEnemy.h"
+#include "Characters/HordeKillerCharacter.h"
+#include "Characters/HordeKillerEnemy.h"
 #include "UI/HordeKillerHUD.h"
 #include "TimerManager.h"
 

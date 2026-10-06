@@ -11,7 +11,8 @@ All notable changes to this project are listed here. The format follows [Keep a 
 
 ### Changed
 
-- Source files are grouped into `Player`, `Weapons`, `Enemies`, `Game` and `UI` folders. Class names are unchanged.
+- Source files are grouped into `Characters`, `Weapons`, `Game` and `UI` folders.
+- The player and the enemy now inherit from a new abstract base class, `AHuman`, which holds their shared health, damage and death logic. Gameplay values are unchanged.
 
 ## 0.1.0 - 2026-10-06
 

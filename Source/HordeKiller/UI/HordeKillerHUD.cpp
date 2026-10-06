@@ -4,7 +4,7 @@
 #include "Engine/Canvas.h"
 #include "Engine/Engine.h"
 #include "Engine/Font.h"
-#include "Player/HordeKillerCharacter.h"
+#include "Characters/HordeKillerCharacter.h"
 #include "Game/HordeKillerGameMode.h"
 
 void AHordeKillerHUD::DrawHUD()

@@ -71,7 +71,7 @@ Every gameplay value is an editable property. Change the defaults in the headers
 | --- | --- | --- |
 | `FireInterval` | 0.2 | Time between shots while fire is held |
 | `MuzzleDistance` | 100 | Distance in front of the camera where projectiles spawn |
-| `MaxHealth` | 100 | Starting health |
+| `MaxHealth` | 100 | Starting health (property inherited from `AHuman`) |
 | `ProjectileClass` | `AHordeKillerProjectile` | Projectile spawned on each shot |
 
 ### Projectile (`AHordeKillerProjectile`)
@@ -87,7 +87,7 @@ Every gameplay value is an editable property. Change the defaults in the headers
 
 | Property | Default | Meaning |
 | --- | --- | --- |
-| `MaxHealth` | 2 | Starting health; with `Damage` at 1 this is two shots |
+| `MaxHealth` | 2 | Starting health (inherited from `AHuman`); with `Damage` at 1 this is two shots |
 | `MoveSpeed` | 380 | Running speed (the player runs at 600) |
 | `AttackDamage` | 10 | Damage dealt to the player per attack |
 | `AttackRange` | 110 | Distance at which an attack lands |
@@ -120,19 +120,30 @@ Source/
   HordeKiller/
     HordeKiller.Build.cs      Module build rules and dependencies
     HordeKiller.h / .cpp      Module registration
-    Player/
-      HordeKillerCharacter.*  Player: movement, input, weapon, health
+    Characters/
+      Human.*                 Base class of player and enemy: health, damage, death
+      HordeKillerCharacter.*  Player: movement, input, weapon
+      HordeKillerEnemy.*      Enemy: chase, attack
     Weapons/
       HordeKillerProjectile.* Physics projectile
-    Enemies/
-      HordeKillerEnemy.*      Enemy: chase, attack, health
     Game/
       HordeKillerGameMode.*   Arena generation, waves, counters, restart
     UI/
       HordeKillerHUD.*        Crosshair and on-screen counters
 ```
 
-Source files are grouped by gameplay area, with each header next to its `.cpp`. Includes are written relative to the module folder, for example `#include "Player/HordeKillerCharacter.h"`.
+Source files are grouped by gameplay area, with each header next to its `.cpp`. Includes are written relative to the module folder, for example `#include "Characters/HordeKillerCharacter.h"`.
+
+### Class hierarchy
+
+```
+ACharacter (engine)
+  AHuman                      Abstract. Health, TakeDamage, IsDead, HandleDamaged / HandleDeath hooks
+    AHordeKillerCharacter     The player
+    AHordeKillerEnemy         A horde enemy
+```
+
+`AHuman` owns the damage flow. Subclasses do not override `TakeDamage`; they override `HandleDamaged` (a hit they survive) and `HandleDeath` (health reached zero) to add their own reaction.
 
 ## How it works
 
