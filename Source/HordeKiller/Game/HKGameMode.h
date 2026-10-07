@@ -22,7 +22,7 @@ class UHKHordeConfig;
  * otherwise the game mode spawns one with DefaultHordeConfig.
  *
  * It selects the player character and HUD classes too, so no Blueprint game mode is required. For the
- * player it uses the Blueprint BP_HKCharacter when it exists, and falls back to the C++ class otherwise.
+ * player it uses the Blueprint BP_HKPlayer when it exists, and falls back to the C++ class otherwise.
  */
 UCLASS()
 class HORDEKILLER_API AHKGameMode : public AGameModeBase

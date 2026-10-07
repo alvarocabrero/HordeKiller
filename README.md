@@ -104,9 +104,9 @@ The same steps by hand, in case the script cannot be used. Adjust the engine pat
 
 ## Tuning
 
-Every gameplay value is an editable property. For the player and the enemy, edit them in the Class Defaults of `BP_HKCharacter` and `BP_HKEnemy` (see [Blueprints](#blueprints)); a value set there overrides the C++ default. For the other classes, change the defaults in the headers. Distances are in centimetres, speeds in centimetres per second and times in seconds.
+Every gameplay value is an editable property. For the player and the enemy, edit them in the Class Defaults of `BP_HKPlayer` and `BP_HKEnemy` (see [Blueprints](#blueprints)); a value set there overrides the C++ default. For the other classes, change the defaults in the headers. Distances are in centimetres, speeds in centimetres per second and times in seconds.
 
-### Weapon and player (`AHKCharacter`)
+### Weapon and player (`AHKPlayer`)
 
 | Property | Default | Meaning |
 | --- | --- | --- |
@@ -216,7 +216,7 @@ If the models are not installed, the game falls back to placeholders: enemies ap
 
 ### Using other models
 
-The model is set by two properties of `AHKHuman`, inherited by the player and the enemy and editable in the Class Defaults of `BP_HKCharacter` and `BP_HKEnemy`:
+The model is set by two properties of `AHKHuman`, inherited by the player and the enemy and editable in the Class Defaults of `BP_HKPlayer` and `BP_HKEnemy`:
 
 | Property | Default | Meaning |
 | --- | --- | --- |
@@ -231,7 +231,7 @@ The player and the enemy each have a Blueprint that derives from their C++ class
 
 | Blueprint | Parent class | Location |
 | --- | --- | --- |
-| `BP_HKCharacter` | `AHKCharacter` | `Content/Blueprints/Characters` |
+| `BP_HKPlayer` | `AHKPlayer` | `Content/Blueprints/Characters` |
 | `BP_HKEnemy` | `AHKEnemy` | `Content/Blueprints/Characters` |
 
 They contain no logic of their own. They exist so that values and components can be changed in the editor without recompiling: open one, select **Class Defaults** and edit the properties listed under [Tuning](#tuning), or select a component to swap its mesh or material.
@@ -256,7 +256,7 @@ HordeKiller.uproject          Project descriptor (engine version, modules, plugi
 Config/                       Engine, game and input settings
 Content/
   Blueprints/Characters/
-    BP_HKCharacter            Blueprint of the player (parent AHKCharacter)
+    BP_HKPlayer            Blueprint of the player (parent AHKPlayer)
     BP_HKEnemy                Blueprint of the enemy (parent AHKEnemy)
   Data/Hordes/
     DA_HKHorde_Default        Default horde config (data asset of class UHKHordeConfig)
@@ -281,7 +281,7 @@ Source/
       HKAnimInstanceHuman.*   Base animation instance of player and enemy
     Characters/
       HKHuman.*               Base class of player and enemy: health, damage, death, body model
-      HKCharacter.*           Player: movement, input, weapon
+      HKPlayer.*           Player: movement, input, weapon
       HKEnemy.*               Enemy: chase, attack
     Weapons/
       HKProjectile.*          Physics projectile
@@ -297,16 +297,16 @@ Source/
       HKHUD.*                 Crosshair and on-screen counters
 ```
 
-Every class written for this project is named with the Unreal type prefix followed by `HK`, such as `AHKCharacter`, and its files drop the type prefix (`HKCharacter.h`). The module itself keeps the full name, `HordeKiller`.
+Every class written for this project is named with the Unreal type prefix followed by `HK`, such as `AHKPlayer`, and its files drop the type prefix (`HKPlayer.h`). The module itself keeps the full name, `HordeKiller`.
 
-Source files are grouped by gameplay area, with each header next to its `.cpp`. Includes are written relative to the module folder, for example `#include "Characters/HKCharacter.h"`.
+Source files are grouped by gameplay area, with each header next to its `.cpp`. Includes are written relative to the module folder, for example `#include "Characters/HKPlayer.h"`.
 
 ### Class hierarchy
 
 ```
 ACharacter (engine)
   AHKHuman           Abstract. Health, TakeDamage, IsDead, HandleDamaged / HandleDeath hooks
-    AHKCharacter     The player
+    AHKPlayer     The player
     AHKEnemy         A horde enemy
 ```
 
@@ -402,7 +402,7 @@ Any class can then query the registry:
 #include "Managers/HKActorManager.h"
 
 TArray<AHKEnemy*> Enemies = UHKActorManager::GetActors<AHKEnemy>();     // all enemies alive
-AHKCharacter* Player      = UHKActorManager::GetFirstActor<AHKCharacter>(); // the player, or nullptr
+AHKPlayer* Player      = UHKActorManager::GetFirstActor<AHKPlayer>(); // the player, or nullptr
 TArray<AActor*> Everything = UHKActorManager::GetAllActors();
 int32 Total                = UHKActorManager::GetActorCount();
 ```

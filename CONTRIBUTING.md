@@ -20,7 +20,7 @@ Follow the steps in the [README](README.md#getting-started) to clone, generate p
 ## Code style
 
 - Follow Epic's [C++ coding standard](https://dev.epicgames.com/documentation/en-us/unreal-engine/epic-cplusplus-coding-standard-for-unreal-engine): tabs for indentation, PascalCase names, and the `A` / `U` / `F` / `E` / `b` prefixes.
-- Name every type created for this project with `HK` right after the Unreal type prefix: `AHKCharacter` for an actor, `UHKHealthComponent` for an object or component, `FHKWaveConfig` for a struct, `EHKEnemyState` for an enum, `IHKDamageable` for an interface. Name the files after the type without that first letter (`HKCharacter.h`, `HKCharacter.cpp`).
+- Name every type created for this project with `HK` right after the Unreal type prefix: `AHKPlayer` for an actor, `UHKHealthComponent` for an object or component, `FHKWaveConfig` for a struct, `EHKEnemyState` for an enum, `IHKDamageable` for an interface. Name the files after the type without that first letter (`HKPlayer.h`, `HKPlayer.cpp`).
 - Make every new actor class subscribe to the actor manager: call `UHKActorManager::Register(this)` in `BeginPlay` and `UHKActorManager::Unregister(this)` in `EndPlay`, unless a parent class already does.
 - In headers, keep functions and variables in separate access blocks, with all the functions first and all the variables at the end. Repeat the access specifier for each block, in this order: `public:` functions, `protected:` functions, `private:` functions, then `public:` variables, `protected:` variables, `private:` variables. Leave out the blocks a class does not need.
 - Do not repeat the class or owner name in member variable names: in `UHKAnimInstanceHuman` it is `GroundSpeed`, not `HumanGroundSpeed`.

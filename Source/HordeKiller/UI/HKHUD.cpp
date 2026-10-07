@@ -4,7 +4,7 @@
 #include "Engine/Canvas.h"
 #include "Engine/Engine.h"
 #include "Engine/Font.h"
-#include "Characters/HKCharacter.h"
+#include "Characters/HKPlayer.h"
 #include "Game/HKGameMode.h"
 #include "Hordes/HKHordeGenerator.h"
 #include "Managers/HKActorManager.h"
@@ -43,7 +43,7 @@ void AHKHUD::DrawHUD()
 	const float TextScale = 1.5f;
 
 	// Health, bottom-left. Rounded up so it never reads 0 while alive.
-	if (const AHKCharacter* Player = Cast<AHKCharacter>(GetOwningPawn()))
+	if (const AHKPlayer* Player = Cast<AHKPlayer>(GetOwningPawn()))
 	{
 		const FString HealthText = FString::Printf(TEXT("Health: %d / %d"),
 			FMath::CeilToInt(Player->GetHealth()), FMath::CeilToInt(Player->GetMaxHealth()));

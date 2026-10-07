@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Characters/HKHuman.h"
-#include "HKCharacter.generated.h"
+#include "HKPlayer.generated.h"
 
 class AHKProjectile;
 class UCameraComponent;
@@ -24,13 +24,13 @@ struct FInputActionValue;
  * means for the player: freezing in place and telling the game mode that the game is over.
  */
 UCLASS()
-class HORDEKILLER_API AHKCharacter : public AHKHuman
+class HORDEKILLER_API AHKPlayer : public AHKHuman
 {
 	GENERATED_BODY()
 
 public:
 	/** Creates the camera and weapon components and configures first-person movement. */
-	AHKCharacter();
+	AHKPlayer();
 
 protected:
 	/** Stops the player's movement and input and notifies the game mode. Called once by AHKHuman when health reaches zero. */

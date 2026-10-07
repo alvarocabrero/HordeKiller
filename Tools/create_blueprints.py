@@ -16,7 +16,7 @@ import unreal
 # (Blueprint name, content folder, C++ parent class path).
 # A class path is "/Script/<ModuleName>.<ClassName without its A/U prefix>".
 BLUEPRINTS = [
-    ("BP_HKCharacter", "/Game/Blueprints/Characters", "/Script/HordeKiller.HKCharacter"),
+    ("BP_HKPlayer", "/Game/Blueprints/Characters", "/Script/HordeKiller.HKPlayer"),
     ("BP_HKEnemy", "/Game/Blueprints/Characters", "/Script/HordeKiller.HKEnemy"),
 ]
 

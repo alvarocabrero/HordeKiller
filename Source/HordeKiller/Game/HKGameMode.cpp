@@ -4,7 +4,7 @@
 #include "Engine/World.h"
 #include "EngineUtils.h"
 #include "Kismet/GameplayStatics.h"
-#include "Characters/HKCharacter.h"
+#include "Characters/HKPlayer.h"
 #include "Hordes/HKHordeConfig.h"
 #include "Hordes/HKHordeGenerator.h"
 #include "UI/HKHUD.h"
@@ -16,11 +16,11 @@ DEFINE_LOG_CATEGORY_STATIC(LogHordeKiller, Log, All);
 
 AHKGameMode::AHKGameMode()
 {
-	DefaultPawnClass = AHKCharacter::StaticClass();
+	DefaultPawnClass = AHKPlayer::StaticClass();
 	HUDClass = AHKHUD::StaticClass();
 
 	// Prefer the player Blueprint; if the asset is missing the C++ class stays.
-	static ConstructorHelpers::FClassFinder<AHKCharacter> PlayerBlueprint(TEXT("/Game/Blueprints/Characters/BP_HKCharacter"));
+	static ConstructorHelpers::FClassFinder<AHKPlayer> PlayerBlueprint(TEXT("/Game/Blueprints/Characters/BP_HKPlayer"));
 	if (PlayerBlueprint.Succeeded())
 	{
 		DefaultPawnClass = PlayerBlueprint.Class;

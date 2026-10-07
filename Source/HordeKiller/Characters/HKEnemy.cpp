@@ -7,7 +7,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Materials/MaterialInstanceDynamic.h"
-#include "Characters/HKCharacter.h"
+#include "Characters/HKPlayer.h"
 #include "Hordes/HKHordeGenerator.h"
 #include "Managers/HKActorManager.h"
 #include "PhysicsControlComponent.h"
@@ -139,7 +139,7 @@ void AHKEnemy::Tick(float DeltaSeconds)
 		return;
 	}
 
-	const AHKCharacter* Player = Cast<AHKCharacter>(UGameplayStatics::GetPlayerPawn(this, 0));
+	const AHKPlayer* Player = Cast<AHKPlayer>(UGameplayStatics::GetPlayerPawn(this, 0));
 	if (!Player || Player->IsDead())
 	{
 		return;
@@ -161,7 +161,7 @@ void AHKEnemy::Tick(float DeltaSeconds)
 	if (Distance <= AttackRange && Now - LastAttackTime >= AttackCooldown)
 	{
 		LastAttackTime = Now;
-		UGameplayStatics::ApplyDamage(const_cast<AHKCharacter*>(Player), AttackDamage, GetController(), this, nullptr);
+		UGameplayStatics::ApplyDamage(const_cast<AHKPlayer*>(Player), AttackDamage, GetController(), this, nullptr);
 	}
 }
 

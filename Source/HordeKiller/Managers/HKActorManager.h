@@ -21,7 +21,7 @@
  *     UHKActorManager::Unregister(this);     // in the actor's EndPlay
  *
  *     TArray<AHKEnemy*> Enemies = UHKActorManager::GetActors<AHKEnemy>();
- *     AHKCharacter* Player = UHKActorManager::GetFirstActor<AHKCharacter>();
+ *     AHKPlayer* Player = UHKActorManager::GetFirstActor<AHKPlayer>();
  *     int32 Total = UHKActorManager::GetActorCount();
  *
  * It is a world subsystem: the engine creates one together with the game world and destroys it with
@@ -99,7 +99,7 @@ public:
 	 * Finds the first registered actor of a given class, including its subclasses and Blueprints.
 	 * Intended for classes with a single instance, such as the player.
 	 *
-	 * @tparam T Actor class to look for, for example AHKCharacter.
+	 * @tparam T Actor class to look for, for example AHKPlayer.
 	 * @return The matching actor that registered earliest, or nullptr if there is none.
 	 */
 	template <typename T>

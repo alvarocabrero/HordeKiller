@@ -1,6 +1,6 @@
 // Copyright (c) 2026 Álvaro Cabrero Barros. Licensed under the MIT License. See LICENSE in the repository root.
 
-#include "Characters/HKCharacter.h"
+#include "Characters/HKPlayer.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/StaticMeshComponent.h"
@@ -18,7 +18,7 @@
 #include "Weapons/HKProjectile.h"
 #include "UObject/ConstructorHelpers.h"
 
-AHKCharacter::AHKCharacter()
+AHKPlayer::AHKPlayer()
 {
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.f);
 
@@ -63,7 +63,7 @@ AHKCharacter::AHKCharacter()
 	GetMesh()->bCastHiddenShadow = true;
 }
 
-void AHKCharacter::CreateDefaultInputAssets()
+void AHKPlayer::CreateDefaultInputAssets()
 {
 	// Only fills what is still empty, so assets assigned in a Blueprint win.
 	if (!MoveAction)
@@ -130,7 +130,7 @@ void AHKCharacter::CreateDefaultInputAssets()
 	Context->MapKey(FireAction, EKeys::LeftMouseButton);
 }
 
-void AHKCharacter::NotifyControllerChanged()
+void AHKPlayer::NotifyControllerChanged()
 {
 	Super::NotifyControllerChanged();
 
@@ -146,7 +146,7 @@ void AHKCharacter::NotifyControllerChanged()
 	}
 }
 
-void AHKCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
+void AHKPlayer::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
@@ -157,15 +157,15 @@ void AHKCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	{
 		Input->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
 		Input->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
-		Input->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AHKCharacter::Move);
-		Input->BindAction(LookAction, ETriggerEvent::Triggered, this, &AHKCharacter::Look);
+		Input->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AHKPlayer::Move);
+		Input->BindAction(LookAction, ETriggerEvent::Triggered, this, &AHKPlayer::Look);
 
 		// Called every frame while held; FireInterval limits the real rate.
-		Input->BindAction(FireAction, ETriggerEvent::Triggered, this, &AHKCharacter::Fire);
+		Input->BindAction(FireAction, ETriggerEvent::Triggered, this, &AHKPlayer::Fire);
 	}
 }
 
-void AHKCharacter::Move(const FInputActionValue& Value)
+void AHKPlayer::Move(const FInputActionValue& Value)
 {
 	const FVector2D Axis = Value.Get<FVector2D>();
 	if (!Controller)
@@ -177,14 +177,14 @@ void AHKCharacter::Move(const FInputActionValue& Value)
 	AddMovementInput(GetActorRightVector(), Axis.X);
 }
 
-void AHKCharacter::Look(const FInputActionValue& Value)
+void AHKPlayer::Look(const FInputActionValue& Value)
 {
 	const FVector2D Axis = Value.Get<FVector2D>();
 	AddControllerYawInput(Axis.X);
 	AddControllerPitchInput(Axis.Y);
 }
 
-void AHKCharacter::Fire()
+void AHKPlayer::Fire()
 {
 	UWorld* World = GetWorld();
 	if (IsDead() || !ProjectileClass || !World)
@@ -217,7 +217,7 @@ void AHKCharacter::Fire()
 	}
 }
 
-void AHKCharacter::HandleDeath()
+void AHKPlayer::HandleDeath()
 {
 	Super::HandleDeath();
 
