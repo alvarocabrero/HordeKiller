@@ -5,16 +5,18 @@
 #include "Engine/StaticMesh.h"
 #include "Engine/StaticMeshActor.h"
 #include "Engine/World.h"
+#include "EngineUtils.h"
 #include "Kismet/GameplayStatics.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Characters/HKCharacter.h"
-#include "Characters/HKEnemy.h"
+#include "Hordes/HKHordeConfig.h"
+#include "Hordes/HKHordeGenerator.h"
 #include "UI/HKHUD.h"
 #include "Managers/HKActorManager.h"
 #include "TimerManager.h"
 #include "UObject/ConstructorHelpers.h"
 
-// Log category for gameplay events (waves, deaths). Filter the Output Log by "LogHordeKiller" to see them.
+// Log category for game events (set-up, player death). Filter the Output Log by "LogHordeKiller" to see them.
 DEFINE_LOG_CATEGORY_STATIC(LogHordeKiller, Log, All);
 
 AHKGameMode::AHKGameMode()
@@ -23,22 +25,24 @@ AHKGameMode::AHKGameMode()
 	// Blueprint or project setting beyond selecting this game mode.
 	DefaultPawnClass = AHKCharacter::StaticClass();
 	HUDClass = AHKHUD::StaticClass();
-	EnemyClass = AHKEnemy::StaticClass();
 
-	// Prefer the Blueprint versions of the player and the enemy when they exist, so that values and
-	// meshes edited in the editor are the ones used in game. FClassFinder takes the asset path without
-	// the "_C" suffix of the generated class. If an asset is missing (for example in a checkout without
-	// Git LFS files) the lookup fails, logs a warning and the C++ class set above stays in place.
+	// Prefer the Blueprint version of the player when it exists, so that values and meshes edited in
+	// the editor are the ones used in game. FClassFinder takes the asset path without the "_C" suffix
+	// of the generated class. If the asset is missing (for example in a checkout without Git LFS files)
+	// the lookup fails, logs a warning and the C++ class set above stays in place.
 	static ConstructorHelpers::FClassFinder<AHKCharacter> PlayerBlueprint(TEXT("/Game/Blueprints/Characters/BP_HKCharacter"));
 	if (PlayerBlueprint.Succeeded())
 	{
 		DefaultPawnClass = PlayerBlueprint.Class;
 	}
 
-	static ConstructorHelpers::FClassFinder<AHKEnemy> EnemyBlueprint(TEXT("/Game/Blueprints/Characters/BP_HKEnemy"));
-	if (EnemyBlueprint.Succeeded())
+	// Horde played in levels that do not bring their own generator. FObjectFinder takes the full object
+	// path, "<package>.<asset name>". If the asset is missing, DefaultHordeConfig stays empty and the
+	// generator reports that it has nothing to spawn.
+	static ConstructorHelpers::FObjectFinder<UHKHordeConfig> DefaultHorde(TEXT("/Game/Data/Hordes/DA_HKHorde_Default.DA_HKHorde_Default"));
+	if (DefaultHorde.Succeeded())
 	{
-		EnemyClass = EnemyBlueprint.Class;
+		DefaultHordeConfig = DefaultHorde.Object;
 	}
 }
 
@@ -56,18 +60,45 @@ void AHKGameMode::BeginPlay()
 	// Every actor of the project subscribes itself to the manager, the game mode included.
 	UHKActorManager::Register(this);
 
-	// Records which classes are in use, which shows at a glance whether the Blueprints were picked up.
-	UE_LOG(LogHordeKiller, Log, TEXT("Player class: %s, enemy class: %s"),
-		*GetNameSafe(DefaultPawnClass), *GetNameSafe(EnemyClass));
-
+	// The arena goes first so that the floor exists before the generator starts dropping enemies on it.
 	if (bBuildArena)
 	{
 		BuildArena();
 	}
 
-	// Give the player a moment to get their bearings before the first wave. The timer is one-shot;
-	// later waves are scheduled from NotifyEnemyKilled.
-	GetWorldTimerManager().SetTimer(WaveTimer, this, &AHKGameMode::StartNextWave, TimeBetweenWaves, false);
+	SetUpHordeGenerator();
+
+	// Records what is in use, which shows at a glance whether the Blueprint and the config were picked up.
+	UE_LOG(LogHordeKiller, Log, TEXT("Player class: %s, horde config: %s"),
+		*GetNameSafe(DefaultPawnClass),
+		HordeGenerator ? *GetNameSafe(HordeGenerator->GetConfig()) : TEXT("no generator"));
+}
+
+void AHKGameMode::SetUpHordeGenerator()
+{
+	// A generator placed in the level by hand takes precedence: it carries that level's own config.
+	// The world is searched directly, instead of asking the actor manager, because the order in which
+	// actors begin play is not guaranteed and the generator may not have registered yet.
+	for (TActorIterator<AHKHordeGenerator> It(GetWorld()); It; ++It)
+	{
+		HordeGenerator = *It;
+		return;
+	}
+
+	// No generator in the level: create one at the centre of the arena floor. Deferred spawning creates
+	// the actor but holds back its BeginPlay, which is where the horde starts, until the config and the
+	// spawn area have been set.
+	const FTransform SpawnTransform(FVector(0.f, 0.f, ArenaFloorZ));
+	HordeGenerator = GetWorld()->SpawnActorDeferred<AHKHordeGenerator>(AHKHordeGenerator::StaticClass(), SpawnTransform);
+	if (HordeGenerator)
+	{
+		HordeGenerator->SetConfig(DefaultHordeConfig);
+
+		// Keep spawn points 2 m inside the walls so no enemy starts embedded in one.
+		HordeGenerator->SetSpawnAreaHalfSize(ArenaHalfSize - 200.f);
+
+		UGameplayStatics::FinishSpawningActor(HordeGenerator, SpawnTransform);
+	}
 }
 
 void AHKGameMode::SpawnArenaBlock(const FVector& Location, const FVector& Size, const FLinearColor& Color)
@@ -120,74 +151,6 @@ void AHKGameMode::BuildArena()
 	SpawnArenaBlock(FVector(0.f, -WallOffset, WallZ), FVector(Side, WallThickness, ArenaWallHeight), WallColor); // -Y side
 }
 
-void AHKGameMode::StartNextWave()
-{
-	if (bGameOver || !EnemyClass)
-	{
-		return;
-	}
-
-	// Linear difficulty ramp: 6, 10, 14, 18... enemies with the default values.
-	++CurrentWave;
-	const int32 EnemyCount = FirstWaveEnemies + (CurrentWave - 1) * EnemiesAddedPerWave;
-
-	// Enemies appear around wherever the player currently is, so there is no safe corner to camp in.
-	const APawn* Player = UGameplayStatics::GetPlayerPawn(this, 0);
-	const FVector Center = Player ? Player->GetActorLocation() : FVector::ZeroVector;
-
-	// Keep spawn points 2 m inside the walls so no enemy starts embedded in one.
-	const float Limit = ArenaHalfSize - 200.f;
-
-	// If a spawn point is occupied (for example by another enemy from this wave), nudge the new enemy
-	// to a free spot nearby, and spawn it regardless if none is found. A wave must never come up short.
-	FActorSpawnParameters Params;
-	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-
-	int32 Spawned = 0;
-	for (int32 Index = 0; Index < EnemyCount; ++Index)
-	{
-		// Random point in a ring around the player: a random direction and a random distance between
-		// the two radii. (Cos, Sin) of the angle is the unit vector pointing in that direction.
-		const float Angle = FMath::FRandRange(0.f, 2.f * PI);
-		const float Radius = FMath::FRandRange(SpawnRadiusMin, SpawnRadiusMax);
-
-		FVector Location = Center + FVector(FMath::Cos(Angle), FMath::Sin(Angle), 0.f) * Radius;
-
-		// Points that fall outside the arena are pulled back to its edge. Near a wall this can bring a
-		// spawn closer to the player than SpawnRadiusMin.
-		Location.X = FMath::Clamp(Location.X, -Limit, Limit);
-		Location.Y = FMath::Clamp(Location.Y, -Limit, Limit);
-
-		// A character's location is its capsule centre. 100 cm above the floor leaves the capsule
-		// (half-height 88 cm) just clear of the ground, and the enemy drops into place.
-		Location.Z = ArenaFloorZ + 100.f;
-
-		if (GetWorld()->SpawnActor<AHKEnemy>(EnemyClass, Location, FRotator::ZeroRotator, Params))
-		{
-			++Spawned;
-		}
-	}
-
-	// Count what was really spawned, not what was requested, so the wave can always be completed.
-	EnemiesAlive += Spawned;
-	UE_LOG(LogHordeKiller, Log, TEXT("Wave %d started: %d enemies spawned around %s"), CurrentWave, Spawned, *Center.ToString());
-}
-
-void AHKGameMode::NotifyEnemyKilled()
-{
-	++Kills;
-
-	// Clamped at zero as a safeguard against an enemy that was not spawned by a wave being killed.
-	EnemiesAlive = FMath::Max(0, EnemiesAlive - 1);
-
-	// Last enemy of the wave: schedule the next one after the usual pause.
-	if (EnemiesAlive == 0 && !bGameOver)
-	{
-		UE_LOG(LogHordeKiller, Log, TEXT("Wave %d cleared (%d kills)"), CurrentWave, Kills);
-		GetWorldTimerManager().SetTimer(WaveTimer, this, &AHKGameMode::StartNextWave, TimeBetweenWaves, false);
-	}
-}
-
 void AHKGameMode::NotifyPlayerDied()
 {
 	// Guard against being called twice, which would schedule two restarts.
@@ -197,17 +160,24 @@ void AHKGameMode::NotifyPlayerDied()
 	}
 
 	bGameOver = true;
-	UE_LOG(LogHordeKiller, Log, TEXT("Player died on wave %d with %d kills"), CurrentWave, Kills);
 
-	// Cancel a wave that may be pending, then leave the game-over message on screen for a moment
-	// before starting again.
-	GetWorldTimerManager().ClearTimer(WaveTimer);
+	if (HordeGenerator)
+	{
+		UE_LOG(LogHordeKiller, Log, TEXT("Player died on wave %d with %d kills"),
+			HordeGenerator->GetCurrentWave(), HordeGenerator->GetKills());
+
+		// No more waves once the game is over.
+		HordeGenerator->StopHorde();
+	}
+
+	// Leave the game-over message on screen for a moment before starting again.
 	GetWorldTimerManager().SetTimer(RestartTimer, this, &AHKGameMode::RestartLevel, RestartDelay, false);
 }
 
 void AHKGameMode::RestartLevel()
 {
-	// Reloading the level recreates the game mode, the player and the arena, so no state has to be
-	// reset by hand. GetCurrentLevelName strips the prefix the editor adds when playing in the editor.
+	// Reloading the level recreates the game mode, the player, the arena and the horde generator, so
+	// no state has to be reset by hand. GetCurrentLevelName strips the prefix the editor adds when
+	// playing in the editor.
 	UGameplayStatics::OpenLevel(this, FName(*UGameplayStatics::GetCurrentLevelName(this)));
 }

@@ -8,7 +8,7 @@
 #include "Kismet/GameplayStatics.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Characters/HKCharacter.h"
-#include "Game/HKGameMode.h"
+#include "Hordes/HKHordeGenerator.h"
 #include "UObject/ConstructorHelpers.h"
 
 AHKEnemy::AHKEnemy()
@@ -56,6 +56,11 @@ AHKEnemy::AHKEnemy()
 	// Starting health, inherited from AHKHuman. Each projectile deals 1 damage by default, so 2 means two
 	// shots to kill.
 	MaxHealth = 2.f;
+}
+
+void AHKEnemy::SetHordeGenerator(AHKHordeGenerator* InGenerator)
+{
+	HordeGenerator = InGenerator;
 }
 
 void AHKEnemy::BeginPlay()
@@ -132,10 +137,11 @@ void AHKEnemy::HandleDeath()
 {
 	Super::HandleDeath();
 
-	// The game mode keeps the kill count and decides when the wave is over.
-	if (AHKGameMode* GameMode = GetWorld()->GetAuthGameMode<AHKGameMode>())
+	// Report the death to the horde generator that spawned this enemy. It keeps the kill count and
+	// decides when the wave is over. An enemy placed in a level by hand has no generator to report to.
+	if (AHKHordeGenerator* Generator = HordeGenerator.Get())
 	{
-		GameMode->NotifyEnemyKilled();
+		Generator->NotifyEnemyKilled(this);
 	}
 
 	// No death animation or ragdoll yet: the enemy just disappears.

@@ -6,6 +6,7 @@
 #include "Engine/Font.h"
 #include "Characters/HKCharacter.h"
 #include "Game/HKGameMode.h"
+#include "Hordes/HKHordeGenerator.h"
 #include "Managers/HKActorManager.h"
 
 void AHKHUD::BeginPlay()
@@ -59,9 +60,19 @@ void AHKHUD::DrawHUD()
 	// which in this single-player game is always the local one.
 	if (const AHKGameMode* GameMode = GetWorld()->GetAuthGameMode<AHKGameMode>())
 	{
-		const FString WaveText = FString::Printf(TEXT("Wave: %d   Enemies: %d   Kills: %d"),
-			GameMode->GetCurrentWave(), GameMode->GetEnemiesAlive(), GameMode->GetKills());
-		DrawText(WaveText, FLinearColor::White, 40.f, 40.f, Font, TextScale);
+		// The wave counters belong to the horde generator; the game mode knows which one is in use.
+		if (const AHKHordeGenerator* Generator = GameMode->GetHordeGenerator())
+		{
+			const FString WaveText = FString::Printf(TEXT("Wave: %d   Enemies: %d   Kills: %d"),
+				Generator->GetCurrentWave(), Generator->GetEnemiesAlive(), Generator->GetKills());
+			DrawText(WaveText, FLinearColor::White, 40.f, 40.f, Font, TextScale);
+
+			// Only a horde that is not endless can be completed.
+			if (Generator->IsHordeComplete() && !GameMode->IsGameOver())
+			{
+				DrawText(TEXT("ALL WAVES CLEARED"), FLinearColor::Green, CenterX - 190.f, CenterY - 80.f, Font, 3.f);
+			}
+		}
 
 		// Shown during the delay between the player's death and the level restart. The offsets roughly
 		// centre the text at this scale; they are not measured from the actual text size.

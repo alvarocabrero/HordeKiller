@@ -6,18 +6,22 @@
 #include "GameFramework/GameModeBase.h"
 #include "HKGameMode.generated.h"
 
-class AHKEnemy;
+class AHKHordeGenerator;
+class UHKHordeConfig;
 
 /**
- * Rules of the game: the horde loop.
+ * Rules of the game.
  *
- * At the start of play it builds a walled arena out of basic shapes, then spawns enemies in waves
- * around the player. A new, larger wave starts a few seconds after the last enemy of the current one
- * dies. It also keeps the counters shown on the HUD and restarts the level when the player dies.
+ * At the start of play it builds a walled arena out of basic shapes and makes sure the level has a
+ * horde generator, which is the actor that spawns the waves of enemies. It also handles the end of
+ * the game: when the player dies it stops the horde and restarts the level.
  *
- * It selects the player character, enemy and HUD classes too, so no Blueprint game mode is required.
- * For the player and the enemy it uses the Blueprints BP_HKCharacter and BP_HKEnemy when they exist,
- * and falls back to the C++ classes otherwise.
+ * The waves themselves are not configured here. They belong to AHKHordeGenerator and to the
+ * UHKHordeConfig data asset it reads. If the level already contains a generator, that one is used as
+ * it is; otherwise the game mode spawns one with DefaultHordeConfig.
+ *
+ * It selects the player character and HUD classes too, so no Blueprint game mode is required. For the
+ * player it uses the Blueprint BP_HKCharacter when it exists, and falls back to the C++ class otherwise.
  */
 UCLASS()
 class HORDEKILLER_API AHKGameMode : public AGameModeBase
@@ -25,29 +29,20 @@ class HORDEKILLER_API AHKGameMode : public AGameModeBase
 	GENERATED_BODY()
 
 public:
-	/** Selects the default pawn, HUD and enemy classes, preferring the player and enemy Blueprints if present. */
+	/** Selects the default pawn and HUD classes and the default horde config. */
 	AHKGameMode();
 
-	/** Called by an enemy when it dies. Updates the counters and schedules the next wave if it was the last one. */
-	void NotifyEnemyKilled();
-
-	/** Called by the player character when it dies. Ends the game and schedules a level restart. */
+	/** Called by the player character when it dies. Ends the game, stops the horde and schedules a level restart. */
 	void NotifyPlayerDied();
 
-	/** @return Number of the wave in progress, starting at 1. It is 0 before the first wave. */
-	int32 GetCurrentWave() const { return CurrentWave; }
-
-	/** @return Number of enemies currently alive. */
-	int32 GetEnemiesAlive() const { return EnemiesAlive; }
-
-	/** @return Total enemies killed since the level started. */
-	int32 GetKills() const { return Kills; }
+	/** @return The generator running this level's horde, or nullptr before play begins. */
+	AHKHordeGenerator* GetHordeGenerator() const { return HordeGenerator; }
 
 	/** @return True once the player has died. */
 	bool IsGameOver() const { return bGameOver; }
 
 protected:
-	/** Builds the arena and schedules the first wave. */
+	/** Builds the arena and finds or creates the horde generator. */
 	virtual void BeginPlay() override;
 
 	/**
@@ -69,38 +64,22 @@ protected:
 	 */
 	void SpawnArenaBlock(const FVector& Location, const FVector& Size, const FLinearColor& Color);
 
-	/** Advances the wave counter and spawns that wave's enemies in a ring around the player. */
-	void StartNextWave();
+	/** Uses the horde generator placed in the level, or spawns one with DefaultHordeConfig if there is none. */
+	void SetUpHordeGenerator();
 
 	/** Reloads the current level, which resets everything to its initial state. */
 	void RestartLevel();
 
-	/** Enemy class spawned by the waves. Defaults to the BP_HKEnemy Blueprint, or to the C++ enemy if that asset is missing. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Waves")
-	TSubclassOf<AHKEnemy> EnemyClass;
-
-	/** Number of enemies in the first wave. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Waves")
-	int32 FirstWaveEnemies = 6;
-
-	/** Extra enemies added with each new wave. Wave N has FirstWaveEnemies + (N - 1) * this value. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Waves")
-	int32 EnemiesAddedPerWave = 4;
-
-	/** Pause before the first wave and between one wave being cleared and the next starting, in seconds. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Waves")
-	float TimeBetweenWaves = 3.f;
-
-	/** Closest distance to the player at which an enemy can spawn, in cm. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Waves")
-	float SpawnRadiusMin = 1500.f;
-
-	/** Farthest distance from the player at which an enemy can spawn, in cm. Spawns are also kept inside the arena. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Waves")
-	float SpawnRadiusMax = 2500.f;
+	/**
+	 * Horde used in levels that have no horde generator of their own. Defaults to the asset
+	 * DA_HKHorde_Default. To give a level a different horde, place a horde generator in it and assign
+	 * its config there; this property is then ignored for that level.
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Horde")
+	TObjectPtr<UHKHordeConfig> DefaultHordeConfig;
 
 	/** Time between the player's death and the level restarting, in seconds. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Waves")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Game", meta = (ClampMin = "0", Units = "s"))
 	float RestartDelay = 3.f;
 
 	/** Whether to generate the arena at the start of play. Turn it off when using a hand-made level. */
@@ -120,20 +99,12 @@ protected:
 	float ArenaFloorZ = 5.f;
 
 private:
-	/** Number of the wave in progress; 0 until the first wave starts. */
-	int32 CurrentWave = 0;
+	/** The generator running this level's horde. UPROPERTY keeps the reference valid for the garbage collector. */
+	UPROPERTY()
+	TObjectPtr<AHKHordeGenerator> HordeGenerator;
 
-	/** Enemies spawned and not yet killed. The wave is over when this returns to 0. */
-	int32 EnemiesAlive = 0;
-
-	/** Total enemies killed since the level started. */
-	int32 Kills = 0;
-
-	/** True once the player has died. Stops new waves from starting. */
+	/** True once the player has died. */
 	bool bGameOver = false;
-
-	/** Timer that starts the next wave. */
-	FTimerHandle WaveTimer;
 
 	/** Timer that restarts the level after the player dies. */
 	FTimerHandle RestartTimer;

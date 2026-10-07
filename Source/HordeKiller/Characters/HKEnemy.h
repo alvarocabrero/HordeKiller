@@ -6,6 +6,7 @@
 #include "Characters/HKHuman.h"
 #include "HKEnemy.generated.h"
 
+class AHKHordeGenerator;
 class UMaterialInstanceDynamic;
 class UStaticMeshComponent;
 
@@ -30,6 +31,14 @@ class HORDEKILLER_API AHKEnemy : public AHKHuman
 public:
 	/** Builds the placeholder body and configures movement and AI possession. */
 	AHKEnemy();
+
+	/**
+	 * Tells the enemy which horde generator spawned it, so it can report its death to that generator.
+	 * Called by the generator right after spawning the enemy.
+	 *
+	 * @param InGenerator The generator this enemy belongs to.
+	 */
+	void SetHordeGenerator(AHKHordeGenerator* InGenerator);
 
 	/**
 	 * Chases the player and attacks when in range.
@@ -81,6 +90,13 @@ protected:
 	FLinearColor WoundedColor = FLinearColor(1.f, 0.55f, 0.f);
 
 private:
+	/**
+	 * The horde generator that spawned this enemy, if any. A weak pointer: the enemy does not keep the
+	 * generator alive. The actor's Owner cannot be used for this, because possession by the AI
+	 * controller replaces the owner with that controller.
+	 */
+	TWeakObjectPtr<AHKHordeGenerator> HordeGenerator;
+
 	/** World time of the last attack, in seconds. Starts far in the past so the first attack is immediate. */
 	float LastAttackTime = -1000.f;
 

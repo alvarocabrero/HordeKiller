@@ -9,7 +9,7 @@ The project contains no art assets. The arena, the enemies, the weapon, the HUD 
 - **Physics projectile weapon.** Every shot is a simulated rigid body launched with an impulse. Projectiles drop with gravity, bounce off the floor and walls, and knock enemies back.
 - **Two-hit enemies.** Enemies have 2 health and each projectile deals 1 damage. They turn from red to orange after the first hit.
 - **Chasing horde.** Enemies run straight at the player, spread out around each other and deal damage on contact.
-- **Endless waves.** Each wave spawns in a ring around the player and is larger than the previous one.
+- **Data-driven waves.** A horde generator spawns waves in a ring around the player. The waves are described in a data asset, and each level can have its own.
 - **Health and game over.** The player has 100 health; on death the level restarts after a short delay.
 - **Canvas HUD.** Crosshair, health, wave number, enemies alive and kill count.
 - **Generated arena.** An 80 x 80 m floor with four walls, built at the start of play.
@@ -94,14 +94,23 @@ Every gameplay value is an editable property. For the player and the enemy, edit
 | `AttackCooldown` | 1 | Time between attacks |
 | `HealthyColor` / `WoundedColor` | red / orange | Body colour before and after the first hit |
 
-### Waves and arena (`AHKGameMode`)
+### Waves (`UHKHordeConfig` data asset)
+
+Waves are configured in a data asset, not in code. See [Horde generator](#horde-generator). The values below are those of the default asset, `DA_HKHorde_Default`.
 
 | Property | Default | Meaning |
 | --- | --- | --- |
-| `FirstWaveEnemies` | 6 | Enemies in the first wave |
-| `EnemiesAddedPerWave` | 4 | Extra enemies in each following wave |
+| `Waves` | one wave of 6 `BP_HKEnemy` | List of waves; each wave is a list of enemy class and count |
 | `TimeBetweenWaves` | 3 | Pause before the first wave and between waves |
+| `bEndless` | true | Whether the last wave keeps repeating after the list ends |
+| `EndlessEnemiesAddedPerWave` | 4 | Enemies added on each repetition in endless mode |
 | `SpawnRadiusMin` / `SpawnRadiusMax` | 1500 / 2500 | Ring around the player where enemies spawn |
+
+### Game and arena (`AHKGameMode`)
+
+| Property | Default | Meaning |
+| --- | --- | --- |
+| `DefaultHordeConfig` | `DA_HKHorde_Default` | Horde used in levels without their own horde generator |
 | `RestartDelay` | 3 | Time between the player's death and the restart |
 | `bBuildArena` | true | Whether to generate the arena |
 | `ArenaHalfSize` | 4000 | Half the side of the square arena |
@@ -140,8 +149,11 @@ Content/
   Blueprints/Characters/
     BP_HKCharacter            Blueprint of the player (parent AHKCharacter)
     BP_HKEnemy                Blueprint of the enemy (parent AHKEnemy)
+  Data/Hordes/
+    DA_HKHorde_Default        Default horde config (data asset of class UHKHordeConfig)
 Tools/
   create_blueprints.py        Script that generates the Blueprints from the C++ classes
+  create_horde_configs.py     Script that generates the horde config data assets
 Source/
   HordeKiller.Target.cs       Build target for the standalone game
   HordeKillerEditor.Target.cs Build target for the editor
@@ -156,8 +168,11 @@ Source/
       HKProjectile.*          Physics projectile
     Game/
       HKGameMode.*            Arena generation, waves, counters, restart
+    Hordes/
+      HKHordeGenerator.*      Actor that spawns the waves and tracks their progress
+      HKHordeConfig.*         Data asset class that describes a horde's waves
     Managers/
-      HKActorManager.*        Registry of every actor in the match, with static access
+      HKActorManager.*        Registry of the actors in the match, with static access
     UI/
       HKHUD.*                 Crosshair and on-screen counters
 ```
@@ -176,6 +191,50 @@ ACharacter (engine)
 ```
 
 `AHKHuman` owns the damage flow. Subclasses do not override `TakeDamage`; they override `HandleDamaged` (a hit they survive) and `HandleDeath` (health reached zero) to add their own reaction.
+
+## Horde generator
+
+Everything about waves is split in two:
+
+- **`AHKHordeGenerator`** is an actor that holds the functionality: the countdown between waves, picking spawn points, spawning enemies, counting how many are alive and killed, and deciding when the horde is over.
+- **`UHKHordeConfig`** is a data asset that holds the configuration: which waves there are and how they spawn. The generator reads it from its `Config` property.
+
+### Configuring a horde
+
+A horde config contains a list of waves. Each wave is a list of groups, and each group is an enemy class and a count, so a wave can mix several kinds of enemy. For example:
+
+```
+Waves
+  [0] EnemyGroups: BP_HKEnemy x 6
+  [1] EnemyGroups: BP_HKEnemy x 10
+  [2] EnemyGroups: BP_HKEnemy x 8, BP_HKFastEnemy x 4
+```
+
+Waves play in order. When the list ends, `bEndless` decides what happens: if it is on, the last wave repeats forever with `EndlessEnemiesAddedPerWave` more enemies each time; if it is off, the horde is complete and the HUD shows "ALL WAVES CLEARED".
+
+The default asset, `Content/Data/Hordes/DA_HKHorde_Default`, has a single wave of 6 enemies in endless mode adding 4 per wave, which gives 6, 10, 14, 18 and so on.
+
+### A different horde for each level
+
+1. In the Content Browser, choose **Add > Miscellaneous > Data Asset**, pick **HK Horde Config** and name it, for example `DA_HKHorde_Level2`.
+2. Open it and fill in its waves and settings.
+3. Open the level, drag an **HK Horde Generator** actor into it and place it on the floor at the centre of the play area.
+4. In the generator's Details panel, set **Config** to the new asset. Set **Spawn Area Half Size** to keep spawns inside the play area; 0 means no limit.
+
+A level that has a generator uses that generator and its config. A level without one gets a generator spawned by the game mode, using the game mode's `DefaultHordeConfig`.
+
+### Generator properties
+
+| Property | Default | Meaning |
+| --- | --- | --- |
+| `Config` | none | Horde config asset this generator plays |
+| `bAutoStart` | true | Start the horde when play begins; turn off to call `StartHorde()` from code |
+| `SpawnAreaHalfSize` | 0 | Half the side of the square spawn area centred on the generator; 0 is unlimited |
+| `SpawnHeightOffset` | 100 | Height above the generator at which enemies spawn |
+
+From code, the generator in use is available as `AHKGameMode::GetHordeGenerator()`, and exposes `StartHorde()`, `StopHorde()`, `GetCurrentWave()`, `GetEnemiesAlive()`, `GetKills()` and `IsHordeComplete()`. Its events are written to the Output Log under `LogHKHorde`.
+
+`Tools/create_horde_configs.py` generated the default asset and can recreate it; run it the same way as the Blueprint script. It skips assets that already exist.
 
 ## Actor manager
 
@@ -232,7 +291,8 @@ The functions are C++ only for now; they are not exposed to Blueprint graphs.
 
 - **Projectiles** are static mesh spheres with physics simulation, hit events and continuous collision detection enabled. Firing applies a single velocity-change impulse along the camera's aim direction; after that the physics engine moves them. On hitting an enemy at speed they apply damage and knockback and are destroyed.
 - **Enemies** are characters possessed by an AI controller. Each frame they add movement input towards the player and attack when within range.
-- **The game mode** counts living enemies and starts the next wave when the count reaches zero.
+- **The horde generator** spawns each wave described in its config asset, counts living enemies and starts the next wave when the count reaches zero.
+- **The game mode** builds the arena, makes sure the level has a horde generator and restarts the level when the player dies.
 - **Input** uses Enhanced Input. The actions and the mapping context are created at runtime unless assets are assigned in a child Blueprint of the character.
 
 The source files are commented in detail and are the best reference for the specifics.
