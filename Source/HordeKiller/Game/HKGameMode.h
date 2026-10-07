@@ -63,6 +63,7 @@ protected:
 	/** Reloads the current level, which resets everything to its initial state. */
 	void RestartLevel();
 
+protected:
 	/**
 	 * Horde used in levels that have no horde generator of their own. Defaults to the asset
 	 * DA_HKHorde_Default. To give a level a different horde, place a horde generator in it and assign

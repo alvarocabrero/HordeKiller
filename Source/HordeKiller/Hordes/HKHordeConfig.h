@@ -33,12 +33,14 @@ struct HORDEKILLER_API FHKWaveConfig
 {
 	GENERATED_BODY()
 
+public:
+	/** @return Total number of enemies in the wave, adding up all its groups. */
+	int32 GetEnemyCount() const;
+
+public:
 	/** Enemies in this wave. Add one entry per enemy class; all of them spawn at the start of the wave. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Wave")
 	TArray<FHKWaveEnemyGroup> EnemyGroups;
-
-	/** @return Total number of enemies in the wave, adding up all its groups. */
-	int32 GetEnemyCount() const;
 };
 
 /**
@@ -63,6 +65,7 @@ public:
 	 */
 	bool GetWave(int32 WaveNumber, FHKWaveConfig& OutWave) const;
 
+public:
 	/** Waves of the horde, played in order from top to bottom. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Waves")
 	TArray<FHKWaveConfig> Waves;

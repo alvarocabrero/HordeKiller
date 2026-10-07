@@ -95,6 +95,7 @@ protected:
 	/** Applies the given colour to whichever body is showing: the humanoid model or the placeholder cylinder. */
 	void SetBodyColor(const FLinearColor& Color);
 
+protected:
 	/** Placeholder body: an engine cylinder scaled to fill the collision capsule. Hidden when the humanoid body model is available. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy")
 	TObjectPtr<UStaticMeshComponent> BodyMesh;

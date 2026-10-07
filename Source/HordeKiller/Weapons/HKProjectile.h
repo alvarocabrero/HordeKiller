@@ -65,6 +65,7 @@ protected:
 	void OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 		FVector NormalImpulse, const FHitResult& Hit);
 
+protected:
 	/** Simulated sphere. It is the root component and serves as both the visual and the collision body. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Projectile")
 	TObjectPtr<UStaticMeshComponent> Mesh;

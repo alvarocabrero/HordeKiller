@@ -103,6 +103,19 @@ protected:
 	 */
 	void SetBodyTint(const FLinearColor& Color);
 
+private:
+	/**
+	 * Loads BodyModel and BodyAnimClass and puts them on the mesh component, with its feet at the bottom
+	 * of the capsule.
+	 *
+	 * @return True if the model was found and applied.
+	 */
+	bool ApplyBodyModel();
+
+	/** Attaches the mesh component to the capsule with its feet at the bottom, facing forward. */
+	void PlaceBodyOnCapsule();
+
+protected:
 	/** Health the character starts with. Subclasses set their own default in their constructor. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Health")
 	float MaxHealth = 100.f;
@@ -119,17 +132,6 @@ protected:
 	TSoftClassPtr<UAnimInstance> BodyAnimClass;
 
 private:
-	/**
-	 * Loads BodyModel and BodyAnimClass and puts them on the mesh component, with its feet at the bottom
-	 * of the capsule.
-	 *
-	 * @return True if the model was found and applied.
-	 */
-	bool ApplyBodyModel();
-
-	/** Attaches the mesh component to the capsule with its feet at the bottom, facing forward. */
-	void PlaceBodyOnCapsule();
-
 	/** The actor that dealt the most recent damage. Weak, because projectiles destroy themselves on impact. */
 	TWeakObjectPtr<AActor> LastDamageCauser;
 

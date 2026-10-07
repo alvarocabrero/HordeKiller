@@ -70,6 +70,7 @@ protected:
 	 */
 	void CreateDefaultInputAssets();
 
+protected:
 	/** First-person camera at eye height. It follows the controller's rotation, including pitch. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	TObjectPtr<UCameraComponent> FirstPersonCamera;

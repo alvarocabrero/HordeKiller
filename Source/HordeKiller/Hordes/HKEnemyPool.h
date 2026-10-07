@@ -79,6 +79,7 @@ protected:
 	/** @return World position where inactive enemies wait: far below the owner, out of the play area. */
 	FVector GetParkLocation() const;
 
+protected:
 	/** Distance below the owning actor at which inactive enemies wait, in cm. */
 	UPROPERTY(EditAnywhere, Category = "Pool", meta = (ClampMin = "0", Units = "cm"))
 	float ParkDepth = 5000.f;

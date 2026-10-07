@@ -121,6 +121,7 @@ protected:
 	 */
 	void EnsurePoolForWave(int32 WaveNumber);
 
+protected:
 	/** Pool that creates the enemies in advance and reuses them between waves. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Horde")
 	TObjectPtr<UHKEnemyPool> EnemyPool;
