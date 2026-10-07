@@ -17,7 +17,7 @@ class UHKHordeConfig;
  * and restarts the level.
  *
  * The level itself (floor, walls, lighting, player start) is not created here: it is a map asset, such
- * as Test_L_HKArena. The waves are not configured here either. They belong to AHKHordeGenerator and to the
+ * as Test_HKArenaMap. The waves are not configured here either. They belong to AHKHordeGenerator and to the
  * UHKHordeConfig data asset it reads. If the level contains a generator, that one is used as it is;
  * otherwise the game mode spawns one with DefaultHordeConfig.
  *
