@@ -27,13 +27,13 @@ Follow the steps in the [README](README.md#getting-started) to clone, generate p
 - In `.cpp` files, keep comments short: one line saying why, only where the code does not make it obvious. The detailed explanations belong in the header.
 - Expose gameplay values as `UPROPERTY(EditAnywhere)` instead of hard-coding them, and list them in the README's tuning tables.
 - Start each source file with the copyright line used by the existing files.
-- Put new classes in the folder for their gameplay area (`Characters`, `Weapons`, `Game`, `Hordes`, `Managers`, `UI`), keeping the header next to its `.cpp`, and include them by their path from the module folder.
+- Put new classes in the folder for their gameplay area (`Animation`, `Characters`, `Weapons`, `Game`, `Hordes`, `Managers`, `UI`), keeping the header next to its `.cpp`, and include them by their path from the module folder.
 
 ## What not to commit
 
 Generated files are ignored by `.gitignore` and should stay out of the repository: `Binaries/`, `Intermediate/`, `Saved/`, `DerivedDataCache/`, `.vs/` and `*.sln`.
 
-Epic's content must stay out of the repository too. `Content/Characters/Mannequins` is ignored for that reason: those assets are licensed by Epic under the Unreal Engine EULA and cannot be redistributed here. Do not add them, or any other engine or Marketplace content, to a commit. Third-party assets keep their original names; the `HK` prefix is only for what is made for this project.
+Epic's content must stay out of the repository too. `Content/Characters` is ignored for that reason: those assets are licensed by Epic under the Unreal Engine EULA and cannot be redistributed here. Do not add them, or any other engine or Marketplace content, to a commit. Third-party assets keep their original names; the `HK` prefix is only for what is made for this project.
 
 ## License
 

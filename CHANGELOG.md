@@ -13,6 +13,7 @@ All notable changes to this project are listed here. The format follows [Keep a 
 - `AHKHordeGenerator`, an actor that holds all wave functionality, and `UHKHordeConfig`, a data asset that describes a horde's waves. Each level can have its own config. The default asset, `DA_HKHorde_Default`, reproduces the previous waves (6, 10, 14...), and `Tools/create_horde_configs.py` generates it.
 - `Test_HKArenaMap` (in `Content/Maps/Test`), a test level asset with the arena, lighting, player start and horde generator, set as the default map, plus its two materials and the script that generates them (`Tools/create_arena_level.py`).
 - Humanoid models for the player (Quinn) and the enemies (Manny), using Epic's mannequins and their locomotion animations. The assets are copied from the engine by `Tools/install_mannequins.py` and are not stored in the repository; without them the characters fall back to their placeholder shapes.
+- `UHKAnimInstanceHuman`, a C++ base animation instance for the player and the enemies, and `ABP_HKHuman`, the animation Blueprint that derives from it. The Blueprint is generated locally by `Tools/create_anim_blueprint.py` from the engine's `ABP_Unarmed` and is not stored in the repository.
 
 ### Changed
 

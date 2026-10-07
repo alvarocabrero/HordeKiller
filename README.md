@@ -55,6 +55,12 @@ The project contains no art assets of its own. The arena, the weapon and the pro
    "C:\Program Files\Epic Games\UE_5.6\Engine\Binaries\Win64\UnrealEditor-Cmd.exe" "%CD%\HordeKiller.uproject" -run=pythonscript -script="%CD%\Tools\install_mannequins.py"
    ```
 
+   Then generate the animation Blueprint that drives them:
+
+   ```
+   "C:\Program Files\Epic Games\UE_5.6\Engine\Binaries\Win64\UnrealEditor-Cmd.exe" "%CD%\HordeKiller.uproject" -run=pythonscript -script="%CD%\Tools\create_anim_blueprint.py"
+   ```
+
    Without this step the game still runs, with placeholder shapes instead of the models. See [Character models](#character-models).
 
 5. Open the editor and press **Play**.
@@ -144,14 +150,35 @@ To add another level, create it in the editor, give it a floor, a `PlayerStart` 
 
 ## Character models
 
-The player and the enemies are humanoids: Epic's mannequins, **Quinn** for the player and **Manny** for the enemies, driven by the engine's unarmed locomotion animation Blueprint (`ABP_Unarmed`), which gives them idle, walk, run and jump animations.
+The player and the enemies are humanoids: Epic's mannequins, **Quinn** for the player and **Manny** for the enemies, driven by the animation Blueprint `ABP_HKHuman`, which gives them idle, walk, run and jump animations.
 
 - **Enemies** are tinted red, and turn orange after the first hit, using the `HealthyColor` and `WoundedColor` properties.
 - **The player** is seen in first person, so the body is hidden from the player's own camera and only casts its shadow.
 
 ### Where the models come from
 
-The mannequins are Epic Games content, covered by the Unreal Engine EULA and not by this project's license. They are **not stored in this repository**: `Content/Characters/Mannequins` is listed in `.gitignore`. They ship with every engine installation, and `Tools/install_mannequins.py` copies them from there into the project (about 125 MB). Run it once after cloning, as shown in [Getting started](#getting-started). It never overwrites files that are already there.
+The mannequins are Epic Games content, covered by the Unreal Engine EULA and not by this project's license. They are **not stored in this repository**: `Content/Characters` is listed in `.gitignore`. They ship with every engine installation, and `Tools/install_mannequins.py` copies them from there into the project (about 125 MB). Run it once after cloning, as shown in [Getting started](#getting-started). It never overwrites files that are already there.
+
+### Animation
+
+Animation is split between a C++ class and a Blueprint:
+
+- **`UHKAnimInstanceHuman`** (`Source/HordeKiller/Animation`) is the base animation instance for the player and the enemies. Every frame it reads the owning `AHKHuman` and fills these variables, visible in Blueprint under the **Human** category:
+
+  | Variable | Meaning |
+  | --- | --- |
+  | `HumanVelocity` | Velocity in world space, in cm/s |
+  | `HumanGroundSpeed` | Horizontal speed, in cm/s |
+  | `HumanDirection` | Angle between travel and facing direction, in degrees (-180 to 180) |
+  | `bHumanShouldMove` | Moving on purpose: above `MoveSpeedThreshold` and accelerating |
+  | `bHumanIsFalling` | In the air |
+  | `bHumanIsDead` | Health has reached zero |
+
+- **`ABP_HKHuman`** (`Content/Characters/Animation`) is the animation Blueprint used by both. Its parent class is `UHKAnimInstanceHuman`.
+
+Animation graphs cannot be built from a script, so `ABP_HKHuman` is not written from scratch: `Tools/create_anim_blueprint.py` copies the engine's `ABP_Unarmed` and re-parents the copy to `UHKAnimInstanceHuman`. Since it derives from Epic's asset, it is kept out of the repository like the mannequins and generated locally.
+
+As generated, its graph still works the way Epic's does: its own event graph computes its own variables, such as `GroundSpeed` and `IsFalling`, and the anim graph reads those. The C++ variables above are computed alongside and are available in the graph, but nothing reads them yet. To finish moving the logic to C++, open `ABP_HKHuman` in the editor, replace each use of the Blueprint variables in the anim graph and its transitions with the matching `Human...` variable, then delete the event graph nodes and the Blueprint's own variables. This has to be done by hand.
 
 If the models are not installed, the game falls back to placeholders: enemies appear as coloured cylinders and the player has no body. Nothing else changes.
 
@@ -162,7 +189,7 @@ The model is set by two properties of `AHKHuman`, inherited by the player and th
 | Property | Default | Meaning |
 | --- | --- | --- |
 | `BodyModel` | `SKM_Manny_Simple` (enemy), `SKM_Quinn_Simple` (player) | Skeletal mesh shown as the body |
-| `BodyAnimClass` | `ABP_Unarmed` | Animation Blueprint that drives it; must match the model's skeleton |
+| `BodyAnimClass` | `ABP_HKHuman` | Animation Blueprint that drives it; must match the model's skeleton |
 
 The tint is applied to a material parameter named `Paint Tint`, which is what the mannequin materials use. A different model needs a material with that parameter for the enemy colours to show.
 
@@ -210,12 +237,15 @@ Tools/
   create_horde_configs.py     Script that generates the horde config data assets
   create_arena_level.py       Script that generates the arena level and its materials
   install_mannequins.py       Script that copies Epic's mannequins from the engine (not in git)
+  create_anim_blueprint.py    Script that generates ABP_HKHuman from the engine's ABP (not in git)
 Source/
   HordeKiller.Target.cs       Build target for the standalone game
   HordeKillerEditor.Target.cs Build target for the editor
   HordeKiller/
     HordeKiller.Build.cs      Module build rules and dependencies
     HordeKiller.h / .cpp      Module registration
+    Animation/
+      HKAnimInstanceHuman.*   Base animation instance of player and enemy
     Characters/
       HKHuman.*               Base class of player and enemy: health, damage, death, body model
       HKCharacter.*           Player: movement, input, weapon

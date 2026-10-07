@@ -13,7 +13,7 @@ AHKHuman::AHKHuman()
 {
 	// Epic's mannequin. Soft paths, so a project without these assets still loads.
 	BodyModel = FSoftObjectPath(TEXT("/Game/Characters/Mannequins/Meshes/SKM_Manny_Simple.SKM_Manny_Simple"));
-	BodyAnimClass = FSoftObjectPath(TEXT("/Game/Characters/Mannequins/Anims/Unarmed/ABP_Unarmed.ABP_Unarmed_C"));
+	BodyAnimClass = FSoftObjectPath(TEXT("/Game/Characters/Animation/ABP_HKHuman.ABP_HKHuman_C"));
 
 	// The mannequin faces +Y; characters face +X.
 	GetMesh()->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
