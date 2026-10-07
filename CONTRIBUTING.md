@@ -33,6 +33,8 @@ Follow the steps in the [README](README.md#getting-started) to clone, generate p
 
 Generated files are ignored by `.gitignore` and should stay out of the repository: `Binaries/`, `Intermediate/`, `Saved/`, `DerivedDataCache/`, `.vs/` and `*.sln`.
 
+Epic's content must stay out of the repository too. `Content/Characters/Mannequins` is ignored for that reason: those assets are licensed by Epic under the Unreal Engine EULA and cannot be redistributed here. Do not add them, or any other engine or Marketplace content, to a commit. Third-party assets keep their original names; the `HK` prefix is only for what is made for this project.
+
 ## License
 
 By contributing you agree that your contributions are released under the project's [MIT License](LICENSE).

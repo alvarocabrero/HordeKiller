@@ -58,6 +58,14 @@ void AHKEnemy::BeginPlay()
 	// Read here so that values edited in a Blueprint apply.
 	GetCharacterMovement()->MaxWalkSpeed = MoveSpeed;
 
+	// With a body model the placeholder cylinder is not needed.
+	if (HasBodyModel())
+	{
+		BodyMesh->SetVisibility(false);
+		SetBodyTint(HealthyColor);
+		return;
+	}
+
 	// Per-instance material, so this enemy can change colour alone.
 	BodyMaterial = BodyMesh->CreateDynamicMaterialInstance(0);
 	if (BodyMaterial)
@@ -105,6 +113,7 @@ void AHKEnemy::HandleDamaged(float DamageApplied)
 {
 	Super::HandleDamaged(DamageApplied);
 
+	SetBodyTint(WoundedColor);
 	if (BodyMaterial)
 	{
 		BodyMaterial->SetVectorParameterValue(TEXT("Color"), WoundedColor);

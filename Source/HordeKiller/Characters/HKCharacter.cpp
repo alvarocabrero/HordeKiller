@@ -56,6 +56,11 @@ AHKCharacter::AHKCharacter()
 
 	ProjectileClass = AHKProjectile::StaticClass();
 	MaxHealth = 100.f;
+
+	// The player uses Quinn. First person: the owner does not see the body, only its shadow.
+	BodyModel = FSoftObjectPath(TEXT("/Game/Characters/Mannequins/Meshes/SKM_Quinn_Simple.SKM_Quinn_Simple"));
+	GetMesh()->SetOwnerNoSee(true);
+	GetMesh()->bCastHiddenShadow = true;
 }
 
 void AHKCharacter::CreateDefaultInputAssets()

@@ -61,7 +61,7 @@ protected:
 	/** Reports the kill to the game mode and removes the enemy from the world. Called once by AHKHuman when health reaches zero. */
 	virtual void HandleDeath() override;
 
-	/** Placeholder body: an engine cylinder scaled to fill the collision capsule. It has no collision of its own. */
+	/** Placeholder body: an engine cylinder scaled to fill the collision capsule. Hidden when the humanoid body model is available. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy")
 	TObjectPtr<UStaticMeshComponent> BodyMesh;
 

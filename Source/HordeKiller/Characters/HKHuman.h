@@ -6,14 +6,20 @@
 #include "GameFramework/Character.h"
 #include "HKHuman.generated.h"
 
+class UAnimInstance;
+class USkeletalMesh;
+
 /**
  * Base class for every character in the game: the player and the enemies.
  *
- * It holds what they have in common, which is being alive: a pool of health, taking damage and dying.
- * The damage flow lives here once, and each subclass only says what is specific to it by overriding
- * two hooks:
- *   - HandleDamaged: called after a hit the character survives.
- *   - HandleDeath:   called once, when health reaches zero.
+ * It holds what they have in common:
+ *   - Being alive: a pool of health, taking damage and dying. The damage flow lives here once, and
+ *     each subclass only says what is specific to it by overriding two hooks, HandleDamaged (called
+ *     after a hit the character survives) and HandleDeath (called once, when health reaches zero).
+ *   - A humanoid body: a skeletal mesh with an animation Blueprint, shown on the character's mesh
+ *     component. The model is optional. Its assets (Epic's mannequins) are not stored in the
+ *     repository, so when they are missing the character simply has no body model and subclasses
+ *     keep their placeholder shapes.
  *
  * The class is abstract: it cannot be spawned or placed in a level on its own.
  */
@@ -23,6 +29,9 @@ class HORDEKILLER_API AHKHuman : public ACharacter
 	GENERATED_BODY()
 
 public:
+	/** Sets the default body model and orients the mesh component for it. */
+	AHKHuman();
+
 	/**
 	 * Applies incoming damage and triggers the damaged or death hook.
 	 *
@@ -46,8 +55,11 @@ public:
 	/** @return True once health has reached zero. */
 	bool IsDead() const { return bDead; }
 
+	/** @return True if the humanoid body model was found and is being shown. */
+	bool HasBodyModel() const { return bHasBodyModel; }
+
 protected:
-	/** Fills health from MaxHealth and registers the character with the actor manager once it is in the world. */
+	/** Registers with the actor manager, fills health from MaxHealth and applies the body model. */
 	virtual void BeginPlay() override;
 
 	/**
@@ -67,14 +79,43 @@ protected:
 	/** Called once when health reaches zero, after the character has been marked as dead. Does nothing by default. */
 	virtual void HandleDeath();
 
+	/**
+	 * Tints the body model. Has no effect if there is no body model.
+	 *
+	 * @param Color Colour applied to the paint of every material of the body.
+	 */
+	void SetBodyTint(const FLinearColor& Color);
+
 	/** Health the character starts with. Subclasses set their own default in their constructor. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Health")
 	float MaxHealth = 100.f;
 
+	/**
+	 * Humanoid model shown as the character's body. A soft reference: the asset is only loaded when play
+	 * begins, and it may be missing. Leave empty to have no body model.
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Appearance")
+	TSoftObjectPtr<USkeletalMesh> BodyModel;
+
+	/** Animation Blueprint that drives the body model. It must be made for the model's skeleton. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Appearance")
+	TSoftClassPtr<UAnimInstance> BodyAnimClass;
+
 private:
+	/**
+	 * Loads BodyModel and BodyAnimClass and puts them on the mesh component, with its feet at the bottom
+	 * of the capsule.
+	 *
+	 * @return True if the model was found and applied.
+	 */
+	bool ApplyBodyModel();
+
 	/** Current health. Set from MaxHealth in BeginPlay. */
 	float Health = 0.f;
 
 	/** True once health has reached zero. Blocks further damage. */
 	bool bDead = false;
+
+	/** True if the body model was found and applied in BeginPlay. */
+	bool bHasBodyModel = false;
 };

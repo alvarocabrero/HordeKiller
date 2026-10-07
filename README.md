@@ -2,12 +2,13 @@
 
 A horde shooter base for Unreal Engine 5.6, written entirely in C++. Waves of enemies chase you around an arena and you take them down with a weapon that fires physics-driven projectiles.
 
-The project contains no art assets of its own: everything is built from the engine's basic shapes. Its assets are an arena level, two Blueprints for the player and the enemy, a horde config and two materials, all of which can be edited in the editor.
+The project contains no art assets of its own. The arena, the weapon and the projectiles are built from the engine's basic shapes, and the characters use Epic's mannequins, which are copied from the engine installation instead of being stored in the repository. Its own assets are an arena level, two Blueprints for the player and the enemy, a horde config and two materials, all of which can be edited in the editor.
 
 ## Features
 
 - **Physics projectile weapon.** Every shot is a simulated rigid body launched with an impulse. Projectiles drop with gravity, bounce off the floor and walls, and knock enemies back.
 - **Two-hit enemies.** Enemies have 2 health and each projectile deals 1 damage. They turn from red to orange after the first hit.
+- **Humanoid characters.** The player and the enemies use Epic's mannequins with walk and run animations.
 - **Chasing horde.** Enemies run straight at the player, spread out around each other and deal damage on contact.
 - **Data-driven waves.** A horde generator spawns waves in a ring around the player. The waves are described in a data asset, and each level can have its own.
 - **Health and game over.** The player has 100 health; on death the level restarts after a short delay.
@@ -48,7 +49,15 @@ The project contains no art assets of its own: everything is built from the engi
    "C:\Program Files\Epic Games\UE_5.6\Engine\Build\BatchFiles\Build.bat" HordeKillerEditor Win64 Development -Project="%CD%\HordeKiller.uproject" -WaitMutex
    ```
 
-4. In the editor, press **Play**. No further setup is needed.
+4. Optional, but recommended: copy the humanoid character models from your engine installation into the project. Close the editor first, then run:
+
+   ```
+   "C:\Program Files\Epic Games\UE_5.6\Engine\Binaries\Win64\UnrealEditor-Cmd.exe" "%CD%\HordeKiller.uproject" -run=pythonscript -script="%CD%\Tools\install_mannequins.py"
+   ```
+
+   Without this step the game still runs, with placeholder shapes instead of the models. See [Character models](#character-models).
+
+5. Open the editor and press **Play**.
 
 Adjust the engine path in the commands above if Unreal Engine is installed somewhere else.
 
@@ -133,6 +142,30 @@ To add another level, create it in the editor, give it a floor, a `PlayerStart` 
 
 `Tools/create_arena_level.py` generated `Test_HKArenaMap` and its materials. It does nothing if the level already exists, so it never overwrites edits; it is only useful to recreate the level after deleting it.
 
+## Character models
+
+The player and the enemies are humanoids: Epic's mannequins, **Quinn** for the player and **Manny** for the enemies, driven by the engine's unarmed locomotion animation Blueprint (`ABP_Unarmed`), which gives them idle, walk, run and jump animations.
+
+- **Enemies** are tinted red, and turn orange after the first hit, using the `HealthyColor` and `WoundedColor` properties.
+- **The player** is seen in first person, so the body is hidden from the player's own camera and only casts its shadow.
+
+### Where the models come from
+
+The mannequins are Epic Games content, covered by the Unreal Engine EULA and not by this project's license. They are **not stored in this repository**: `Content/Characters/Mannequins` is listed in `.gitignore`. They ship with every engine installation, and `Tools/install_mannequins.py` copies them from there into the project (about 125 MB). Run it once after cloning, as shown in [Getting started](#getting-started). It never overwrites files that are already there.
+
+If the models are not installed, the game falls back to placeholders: enemies appear as coloured cylinders and the player has no body. Nothing else changes.
+
+### Using other models
+
+The model is set by two properties of `AHKHuman`, inherited by the player and the enemy and editable in the Class Defaults of `BP_HKCharacter` and `BP_HKEnemy`:
+
+| Property | Default | Meaning |
+| --- | --- | --- |
+| `BodyModel` | `SKM_Manny_Simple` (enemy), `SKM_Quinn_Simple` (player) | Skeletal mesh shown as the body |
+| `BodyAnimClass` | `ABP_Unarmed` | Animation Blueprint that drives it; must match the model's skeleton |
+
+The tint is applied to a material parameter named `Paint Tint`, which is what the mannequin materials use. A different model needs a material with that parameter for the enemy colours to show.
+
 ## Blueprints
 
 The player and the enemy each have a Blueprint that derives from their C++ class:
@@ -176,6 +209,7 @@ Tools/
   create_blueprints.py        Script that generates the Blueprints from the C++ classes
   create_horde_configs.py     Script that generates the horde config data assets
   create_arena_level.py       Script that generates the arena level and its materials
+  install_mannequins.py       Script that copies Epic's mannequins from the engine (not in git)
 Source/
   HordeKiller.Target.cs       Build target for the standalone game
   HordeKillerEditor.Target.cs Build target for the editor
@@ -183,7 +217,7 @@ Source/
     HordeKiller.Build.cs      Module build rules and dependencies
     HordeKiller.h / .cpp      Module registration
     Characters/
-      HKHuman.*               Base class of player and enemy: health, damage, death
+      HKHuman.*               Base class of player and enemy: health, damage, death, body model
       HKCharacter.*           Player: movement, input, weapon
       HKEnemy.*               Enemy: chase, attack
     Weapons/
@@ -323,7 +357,8 @@ The source files are commented in detail and are the best reference for the spec
 ## Known limitations
 
 - Enemies do not use navigation. They walk in a straight line towards the player and will get stuck on obstacles if any are added.
-- All visuals are placeholder shapes; there are no models, animations, effects or sounds.
+- Characters use the stock mannequins with locomotion animations only: there are no attack, hit or death animations, and enemies disappear when killed. The arena and the weapon are placeholder shapes, and there are no effects or sounds.
+- The player has no first-person arms or weapon model; the weapon is a floating bar.
 - There is no menu, pause screen or score saving.
 - Single-player only.
 
