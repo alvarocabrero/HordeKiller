@@ -24,7 +24,7 @@ Follow the steps in the [README](README.md#getting-started) to clone, generate p
 - Make every new actor class subscribe to the actor manager: call `UHKActorManager::Register(this)` in `BeginPlay` and `UHKActorManager::Unregister(this)` in `EndPlay`, unless a parent class already does.
 - Write all code, comments and documentation in English.
 - Document every class, function and property in the headers with `/** ... */` comments. Property comments become tooltips in the editor, so state the unit (cm, cm/s, seconds).
-- In `.cpp` files, comment the reason behind anything that is not obvious from the code itself.
+- In `.cpp` files, keep comments short: one line saying why, only where the code does not make it obvious. The detailed explanations belong in the header.
 - Expose gameplay values as `UPROPERTY(EditAnywhere)` instead of hard-coding them, and list them in the README's tuning tables.
 - Start each source file with the copyright line used by the existing files.
 - Put new classes in the folder for their gameplay area (`Characters`, `Weapons`, `Game`, `Hordes`, `Managers`, `UI`), keeping the header next to its `.cpp`, and include them by their path from the module folder.

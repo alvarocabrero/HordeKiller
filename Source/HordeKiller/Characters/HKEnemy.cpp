@@ -15,22 +15,15 @@ AHKEnemy::AHKEnemy()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	// By default a character is only given an AI controller when it is placed in a level by hand.
-	// Enemies here are spawned at runtime by the game mode, and a character without a controller never
-	// consumes its movement input, so it would stand still.
+	// Spawned enemies need an AI controller, or their movement input is never consumed.
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 
-	// Radius and half-height of the collision capsule, in cm. Slightly slimmer and shorter than the
-	// player's (42 x 96) so that groups pack together more tightly.
 	GetCapsuleComponent()->InitCapsuleSize(34.f, 88.f);
 
-	// Visual only: projectiles and the player collide with the capsule, never with this mesh.
+	// Visual only; collisions use the capsule. Scaled to fill it.
 	BodyMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BodyMesh"));
 	BodyMesh->SetupAttachment(RootComponent);
 	BodyMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
-	// The basic cylinder is 100 cm wide and 100 cm tall. These factors make it 68 cm wide (capsule
-	// diameter) and 176 cm tall (capsule height).
 	BodyMesh->SetRelativeScale3D(FVector(0.68f, 0.68f, 1.76f));
 
 	static ConstructorHelpers::FObjectFinder<UStaticMesh> CylinderMesh(TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
@@ -40,21 +33,16 @@ AHKEnemy::AHKEnemy()
 	}
 
 	UCharacterMovementComponent* Movement = GetCharacterMovement();
-
-	// Face the direction of travel, turning at up to 540 degrees per second.
 	Movement->bOrientRotationToMovement = true;
 	Movement->RotationRate = FRotator(0.f, 540.f, 0.f);
 
-	// RVO avoidance makes nearby enemies steer around each other. Without it, every enemy heads for the
-	// same point and the horde collapses into a single queue behind the player.
+	// Keeps the horde from collapsing into a single queue behind the player.
 	Movement->bUseRVOAvoidance = true;
 	Movement->AvoidanceConsiderationRadius = 150.f;
 
-	// Rotation comes from movement (above), not from the AI controller.
 	bUseControllerRotationYaw = false;
 
-	// Starting health, inherited from AHKHuman. Each projectile deals 1 damage by default, so 2 means two
-	// shots to kill.
+	// Two projectile hits at the default damage of 1.
 	MaxHealth = 2.f;
 }
 
@@ -67,12 +55,10 @@ void AHKEnemy::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Read the tunable property here rather than in the constructor so that values changed in a child
-	// Blueprint or on a placed instance are respected. Health is initialised by AHKHuman.
+	// Read here so that values edited in a Blueprint apply.
 	GetCharacterMovement()->MaxWalkSpeed = MoveSpeed;
 
-	// A dynamic material instance lets this enemy change colour without affecting the others. The
-	// engine's basic shape material exposes a vector parameter named "Color".
+	// Per-instance material, so this enemy can change colour alone.
 	BodyMaterial = BodyMesh->CreateDynamicMaterialInstance(0);
 	if (BodyMaterial)
 	{
@@ -89,35 +75,28 @@ void AHKEnemy::Tick(float DeltaSeconds)
 		return;
 	}
 
-	// Single-player game: the target is always player 0. Stop chasing once the player is dead so the
-	// horde does not keep attacking during the game-over delay.
 	const AHKCharacter* Player = Cast<AHKCharacter>(UGameplayStatics::GetPlayerPawn(this, 0));
 	if (!Player || Player->IsDead())
 	{
 		return;
 	}
 
-	// Direct steering: head straight for the player, ignoring height. No NavMesh is involved, which is
-	// fine in an open arena but means enemies cannot path around obstacles.
+	// Direct steering, no NavMesh: fine in an open arena.
 	FVector ToPlayer = Player->GetActorLocation() - GetActorLocation();
 	ToPlayer.Z = 0.f;
 	const float Distance = ToPlayer.Size();
 
-	// Stop pushing a little inside attack range. This keeps the enemy from shoving the player around
-	// while still leaving it close enough to keep attacking.
+	// Stop a little inside attack range, so the enemy does not shove the player.
 	if (Distance > AttackRange * 0.8f)
 	{
 		AddMovementInput(ToPlayer.GetSafeNormal());
 	}
 
-	// Melee attack: simply being in range deals damage, limited by the cooldown.
+	// Melee: being in range deals damage, limited by the cooldown.
 	const float Now = GetWorld()->GetTimeSeconds();
 	if (Distance <= AttackRange && Now - LastAttackTime >= AttackCooldown)
 	{
 		LastAttackTime = Now;
-
-		// ApplyDamage takes a non-const actor; the player pointer is const here only because this
-		// function does not otherwise modify the player.
 		UGameplayStatics::ApplyDamage(const_cast<AHKCharacter*>(Player), AttackDamage, GetController(), this, nullptr);
 	}
 }
@@ -126,7 +105,6 @@ void AHKEnemy::HandleDamaged(float DamageApplied)
 {
 	Super::HandleDamaged(DamageApplied);
 
-	// Survived the hit: show that this enemy has been wounded.
 	if (BodyMaterial)
 	{
 		BodyMaterial->SetVectorParameterValue(TEXT("Color"), WoundedColor);
@@ -137,13 +115,11 @@ void AHKEnemy::HandleDeath()
 {
 	Super::HandleDeath();
 
-	// Report the death to the horde generator that spawned this enemy. It keeps the kill count and
-	// decides when the wave is over. An enemy placed in a level by hand has no generator to report to.
+	// Enemies placed by hand have no generator to report to.
 	if (AHKHordeGenerator* Generator = HordeGenerator.Get())
 	{
 		Generator->NotifyEnemyKilled(this);
 	}
 
-	// No death animation or ragdoll yet: the enemy just disappears.
 	Destroy();
 }
