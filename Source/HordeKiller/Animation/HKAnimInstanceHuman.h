@@ -17,7 +17,7 @@ class UCharacterMovementComponent;
  * read those variables in its graph to choose what to play; it does not need any logic of its own in
  * its event graph.
  *
- * All variables are read-only from Blueprint and are listed under the "Human" category.
+ * The variables are listed under the "Human" category in Blueprint.
  */
 UCLASS()
 class HORDEKILLER_API UHKAnimInstanceHuman : public UAnimInstance
@@ -42,31 +42,38 @@ protected:
 
 	/** Movement component of the character. Null while previewing the Blueprint in the editor. */
 	UPROPERTY(BlueprintReadOnly, Category = "Human")
-	TObjectPtr<UCharacterMovementComponent> HumanMovement;
+	TObjectPtr<UCharacterMovementComponent> CharacterMovement;
 
-	/** Current velocity of the character in world space, in cm/s. */
-	UPROPERTY(BlueprintReadOnly, Category = "Human")
-	FVector HumanVelocity = FVector::ZeroVector;
+	/**
+	 * Current velocity of the character in world space, in cm/s.
+	 *
+	 * Writable from Blueprint, unlike the others, for one reason: an animation Blueprint generated from
+	 * the engine's ABP_Unarmed still has that Blueprint's own event graph, which sets a variable of this
+	 * same name. With a read-only property that node would not compile. It writes the same value that
+	 * is computed here, so nothing changes.
+	 */
+	UPROPERTY(BlueprintReadWrite, Category = "Human")
+	FVector Velocity = FVector::ZeroVector;
 
 	/** Horizontal speed of the character, in cm/s. Use it to drive an idle / walk / run blend space. */
 	UPROPERTY(BlueprintReadOnly, Category = "Human")
-	float HumanGroundSpeed = 0.f;
+	float GroundSpeed = 0.f;
 
 	/** Angle between the direction of travel and the direction the character faces, in degrees, from -180 to 180. 0 is straight ahead. */
 	UPROPERTY(BlueprintReadOnly, Category = "Human")
-	float HumanDirection = 0.f;
+	float Direction = 0.f;
 
 	/** True while the character is moving on purpose: it is above MoveSpeedThreshold and is being accelerated by input. */
 	UPROPERTY(BlueprintReadOnly, Category = "Human")
-	bool bHumanShouldMove = false;
+	bool bShouldMove = false;
 
 	/** True while the character is in the air, jumping or falling. */
 	UPROPERTY(BlueprintReadOnly, Category = "Human")
-	bool bHumanIsFalling = false;
+	bool bIsFalling = false;
 
 	/** True once the character's health has reached zero. */
 	UPROPERTY(BlueprintReadOnly, Category = "Human")
-	bool bHumanIsDead = false;
+	bool bIsDead = false;
 
 	/** Horizontal speed, in cm/s, above which the character counts as moving. Avoids flickering between idle and walk. */
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Human", meta = (ClampMin = "0", Units = "cm/s"))

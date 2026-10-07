@@ -10,30 +10,30 @@ void UHKAnimInstanceHuman::NativeInitializeAnimation()
 
 	// Null in the animation editor preview, where the owner is not an AHKHuman.
 	Human = Cast<AHKHuman>(TryGetPawnOwner());
-	HumanMovement = Human ? Human->GetCharacterMovement() : nullptr;
+	CharacterMovement = Human ? Human->GetCharacterMovement() : nullptr;
 }
 
 void UHKAnimInstanceHuman::NativeUpdateAnimation(float DeltaSeconds)
 {
 	Super::NativeUpdateAnimation(DeltaSeconds);
 
-	if (!Human || !HumanMovement)
+	if (!Human || !CharacterMovement)
 	{
 		return;
 	}
 
-	HumanVelocity = HumanMovement->Velocity;
-	HumanGroundSpeed = HumanVelocity.Size2D();
+	Velocity = CharacterMovement->Velocity;
+	GroundSpeed = Velocity.Size2D();
 
 	// Yaw of the velocity relative to the facing direction.
-	HumanDirection = HumanGroundSpeed > 0.f
-		? FRotator::NormalizeAxis(HumanVelocity.Rotation().Yaw - Human->GetActorRotation().Yaw)
+	Direction = GroundSpeed > 0.f
+		? FRotator::NormalizeAxis(Velocity.Rotation().Yaw - Human->GetActorRotation().Yaw)
 		: 0.f;
 
 	// Requiring acceleration stops the walk cycle while sliding to a halt or being pushed.
-	const bool bHasAcceleration = !HumanMovement->GetCurrentAcceleration().IsNearlyZero();
-	bHumanShouldMove = HumanGroundSpeed > MoveSpeedThreshold && bHasAcceleration;
+	const bool bHasAcceleration = !CharacterMovement->GetCurrentAcceleration().IsNearlyZero();
+	bShouldMove = GroundSpeed > MoveSpeedThreshold && bHasAcceleration;
 
-	bHumanIsFalling = HumanMovement->IsFalling();
-	bHumanIsDead = Human->IsDead();
+	bIsFalling = CharacterMovement->IsFalling();
+	bIsDead = Human->IsDead();
 }

@@ -195,18 +195,22 @@ Animation is split between a C++ class and a Blueprint:
 
   | Variable | Meaning |
   | --- | --- |
-  | `HumanVelocity` | Velocity in world space, in cm/s |
-  | `HumanGroundSpeed` | Horizontal speed, in cm/s |
-  | `HumanDirection` | Angle between travel and facing direction, in degrees (-180 to 180) |
-  | `bHumanShouldMove` | Moving on purpose: above `MoveSpeedThreshold` and accelerating |
-  | `bHumanIsFalling` | In the air |
-  | `bHumanIsDead` | Health has reached zero |
+  | `Velocity` | Velocity in world space, in cm/s |
+  | `GroundSpeed` | Horizontal speed, in cm/s |
+  | `Direction` | Angle between travel and facing direction, in degrees (-180 to 180) |
+  | `bShouldMove` | Moving on purpose: above `MoveSpeedThreshold` and accelerating |
+  | `bIsFalling` | In the air |
+  | `bIsDead` | Health has reached zero |
 
 - **`ABP_HKHuman`** (`Content/Characters/Animation`) is the animation Blueprint used by both. Its parent class is `UHKAnimInstanceHuman`.
 
 Animation graphs cannot be built from a script, so `ABP_HKHuman` is not written from scratch: `Tools/create_anim_blueprint.py` copies the engine's `ABP_Unarmed` and re-parents the copy to `UHKAnimInstanceHuman`. Since it derives from Epic's asset, it is kept out of the repository like the mannequins and generated locally.
 
-As generated, its graph still works the way Epic's does: its own event graph computes its own variables, such as `GroundSpeed` and `IsFalling`, and the anim graph reads those. The C++ variables above are computed alongside and are available in the graph, but nothing reads them yet. To finish moving the logic to C++, open `ABP_HKHuman` in the editor, replace each use of the Blueprint variables in the anim graph and its transitions with the matching `Human...` variable, then delete the event graph nodes and the Blueprint's own variables. This has to be done by hand.
+As generated, its graph still works the way Epic's does: its own event graph computes its own variables and the anim graph reads those. Epic's Blueprint uses some of the same names as the C++ class, so when the copy is re-parented the editor renames the Blueprint's clashing variables by adding `_0` (`GroundSpeed_0`, `Direction_0`) and reports it as a warning; that is expected. The C++ variables are computed alongside and are available in the graph, but nothing reads them yet.
+
+To finish moving the logic to C++, open `ABP_HKHuman` in the editor, replace each use of the Blueprint's own variables in the anim graph and its transitions with the C++ variable from the **Human** category, then delete the event graph nodes and the Blueprint's own variables. This has to be done by hand, and because the Blueprint is not stored in the repository, it has to be done on each machine.
+
+The C++ variables used to be named with a `Human` prefix (`HumanGroundSpeed` and so on). `Config/DefaultEngine.ini` has redirects from those names, so a Blueprint that was wired to them keeps working.
 
 If the models are not installed, the game falls back to placeholders: enemies appear as coloured cylinders and the player has no body. Nothing else changes.
 
