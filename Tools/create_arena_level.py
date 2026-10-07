@@ -13,7 +13,7 @@ create_horde_configs.py).
 
 import unreal
 
-LEVEL_PATH = "/Game/Maps/L_HKArena"
+LEVEL_PATH = "/Game/Maps/Test/Test_L_HKArena"
 # Engine level that provides sky, sun, fog and a player start.
 TEMPLATE_PATH = "/Engine/Maps/Templates/Template_Default"
 MATERIAL_FOLDER = "/Game/Materials"
