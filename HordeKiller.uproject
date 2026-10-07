@@ -9,6 +9,7 @@
 	"Plugins": [
 		{ "Name": "EnhancedInput", "Enabled": true },
 		{ "Name": "ModelingToolsEditorMode", "Enabled": true, "TargetAllowList": [ "Editor" ] },
-		{ "Name": "AndroidFileServer", "Enabled": false }
+		{ "Name": "AndroidFileServer", "Enabled": false },
+		{ "Name": "PhysicsControl", "Enabled": true }
 	]
 }

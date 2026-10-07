@@ -55,11 +55,7 @@ bool AHKHuman::ApplyBodyModel()
 
 	USkeletalMeshComponent* Body = GetMesh();
 	Body->SetSkeletalMesh(Model);
-
-	// The model's origin is at its feet; the capsule's is at its centre.
-	FVector Location = Body->GetRelativeLocation();
-	Location.Z = -GetCapsuleComponent()->GetScaledCapsuleHalfHeight();
-	Body->SetRelativeLocation(Location);
+	PlaceBodyOnCapsule();
 
 	if (!BodyAnimClass.IsNull() && FPackageName::DoesPackageExist(BodyAnimClass.GetLongPackageName()))
 	{
@@ -69,6 +65,54 @@ bool AHKHuman::ApplyBodyModel()
 		}
 	}
 	return true;
+}
+
+void AHKHuman::PlaceBodyOnCapsule()
+{
+	// The model's origin is at its feet and it faces +Y; the capsule's origin is its centre and it faces +X.
+	USkeletalMeshComponent* Body = GetMesh();
+	Body->AttachToComponent(GetCapsuleComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	Body->SetRelativeLocationAndRotation(
+		FVector(0.f, 0.f, -GetCapsuleComponent()->GetScaledCapsuleHalfHeight()), FRotator(0.f, -90.f, 0.f));
+}
+
+void AHKHuman::Revive()
+{
+	Health = MaxHealth;
+	bDead = false;
+	LastDamageCauser.Reset();
+}
+
+void AHKHuman::StartRagdoll(const FVector& Impulse)
+{
+	if (!bHasBodyModel)
+	{
+		return;
+	}
+
+	// "Ragdoll" is the engine preset for this: collides with the world, ignores pawns.
+	USkeletalMeshComponent* Body = GetMesh();
+	Body->SetCollisionProfileName(TEXT("Ragdoll"));
+	// Explicit, because StopRagdoll turns collision off and the profile name alone would not turn it back on.
+	Body->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	Body->SetSimulatePhysics(true);
+	Body->AddImpulse(Impulse, NAME_None, true);
+}
+
+void AHKHuman::StopRagdoll()
+{
+	if (!bHasBodyModel)
+	{
+		return;
+	}
+
+	USkeletalMeshComponent* Body = GetMesh();
+	Body->SetSimulatePhysics(false);
+	Body->SetPhysicsBlendWeight(0.f);
+	Body->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	// Simulating moved the body away from the capsule.
+	PlaceBodyOnCapsule();
 }
 
 void AHKHuman::SetBodyTint(const FLinearColor& Color)
@@ -98,6 +142,7 @@ float AHKHuman::TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent, 
 		return 0.f;
 	}
 
+	LastDamageCauser = DamageCauser;
 	Health = FMath::Max(0.f, Health - Applied);
 	if (Health <= 0.f)
 	{

@@ -77,9 +77,10 @@ void AHKProjectile::Tick(float DeltaSeconds)
 void AHKProjectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	FVector NormalImpulse, const FHitResult& Hit)
 {
-	// Only enemies take damage, and only from a fast projectile; the rest is left to physics.
+	// Only living enemies take damage, and only from a fast projectile; the rest, corpses
+	// included, is left to physics.
 	AHKEnemy* Enemy = Cast<AHKEnemy>(OtherActor);
-	if (!Enemy || PreHitVelocity.Size() < MinDamageSpeed)
+	if (!Enemy || Enemy->IsDead() || PreHitVelocity.Size() < MinDamageSpeed)
 	{
 		return;
 	}

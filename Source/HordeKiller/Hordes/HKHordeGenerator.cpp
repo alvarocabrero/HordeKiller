@@ -4,6 +4,7 @@
 #include "Characters/HKEnemy.h"
 #include "Components/SceneComponent.h"
 #include "Engine/World.h"
+#include "Hordes/HKEnemyPool.h"
 #include "Hordes/HKHordeConfig.h"
 #include "Kismet/GameplayStatics.h"
 #include "Managers/HKActorManager.h"
@@ -17,6 +18,8 @@ AHKHordeGenerator::AHKHordeGenerator()
 
 	// Gives the actor a position: the centre of the spawn area.
 	RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("Root"));
+
+	EnemyPool = CreateDefaultSubobject<UHKEnemyPool>(TEXT("EnemyPool"));
 }
 
 void AHKHordeGenerator::BeginPlay()
@@ -54,6 +57,12 @@ void AHKHordeGenerator::StartHorde()
 	bRunning = true;
 	UE_LOG(LogHKHorde, Log, TEXT("Horde started with config %s"), *Config->GetName());
 
+	// Create every enemy the configured waves need now, before play gets busy.
+	for (int32 WaveNumber = 1; WaveNumber <= Config->Waves.Num(); ++WaveNumber)
+	{
+		EnsurePoolForWave(WaveNumber);
+	}
+
 	// First wave after a pause; later ones are scheduled from NotifyEnemyKilled.
 	GetWorldTimerManager().SetTimer(WaveTimer, this, &AHKHordeGenerator::StartNextWave, Config->TimeBetweenWaves, false);
 }
@@ -62,6 +71,35 @@ void AHKHordeGenerator::StopHorde()
 {
 	bRunning = false;
 	GetWorldTimerManager().ClearTimer(WaveTimer);
+}
+
+void AHKHordeGenerator::EnsurePoolForWave(int32 WaveNumber)
+{
+	// Enemies of this wave plus the next, per class: corpses of one wave overlap the next.
+	TMap<UClass*, int32> Needed;
+	for (int32 Offset = 0; Offset < 2; ++Offset)
+	{
+		FHKWaveConfig Wave;
+		if (!Config->GetWave(WaveNumber + Offset, Wave))
+		{
+			continue;
+		}
+		for (const FHKWaveEnemyGroup& Group : Wave.EnemyGroups)
+		{
+			UClass* EnemyClass = Group.EnemyClass ? Group.EnemyClass.Get() : AHKEnemy::StaticClass();
+			Needed.FindOrAdd(EnemyClass) += FMath::Max(0, Group.Count);
+		}
+	}
+
+	for (const TPair<UClass*, int32>& Pair : Needed)
+	{
+		EnemyPool->EnsureCapacity(Pair.Key, Pair.Value);
+	}
+}
+
+void AHKHordeGenerator::ReleaseEnemy(AHKEnemy* Enemy)
+{
+	EnemyPool->Release(Enemy);
 }
 
 FVector AHKHordeGenerator::PickSpawnLocation(const FVector& Center) const
@@ -105,13 +143,12 @@ void AHKHordeGenerator::StartNextWave()
 
 	++CurrentWave;
 
-	// Spawn around the player, so there is no safe corner.
+	// Endless waves grow past what was created at the start.
+	EnsurePoolForWave(CurrentWave);
+
+	// Appear around the player, so there is no safe corner.
 	const APawn* Player = UGameplayStatics::GetPlayerPawn(this, 0);
 	const FVector Center = Player ? Player->GetActorLocation() : GetActorLocation();
-
-	// Always spawn, so a wave never comes up short.
-	FActorSpawnParameters Params;
-	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
 	int32 Spawned = 0;
 	for (const FHKWaveEnemyGroup& Group : Wave.EnemyGroups)
@@ -121,16 +158,16 @@ void AHKHordeGenerator::StartNextWave()
 
 		for (int32 Index = 0; Index < Group.Count; ++Index)
 		{
-			if (AHKEnemy* Enemy = GetWorld()->SpawnActor<AHKEnemy>(EnemyClass, PickSpawnLocation(Center), FRotator::ZeroRotator, Params))
+			if (EnemyPool->Acquire(EnemyClass, PickSpawnLocation(Center)))
 			{
-				Enemy->SetHordeGenerator(this);
 				++Spawned;
 			}
 		}
 	}
 
 	EnemiesAlive += Spawned;
-	UE_LOG(LogHKHorde, Log, TEXT("Wave %d started: %d enemies spawned around %s"), CurrentWave, Spawned, *Center.ToString());
+	UE_LOG(LogHKHorde, Log, TEXT("Wave %d started: %d enemies around %s (pool: %d created, %d handed out in total)"),
+		CurrentWave, Spawned, *Center.ToString(), EnemyPool->GetCreatedCount(), EnemyPool->GetAcquiredCount());
 
 	// An empty wave has no death to trigger the next one, so schedule it here.
 	if (Spawned == 0)

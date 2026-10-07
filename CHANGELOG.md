@@ -15,8 +15,13 @@ All notable changes to this project are listed here. The format follows [Keep a 
 - Humanoid models for the player (Quinn) and the enemies (Manny), using Epic's mannequins and their locomotion animations. The assets are copied from the engine by `Tools/install_mannequins.py` and are not stored in the repository; without them the characters fall back to their placeholder shapes.
 - `UHKAnimInstanceHuman`, a C++ base animation instance for the player and the enemies, and `ABP_HKHuman`, the animation Blueprint that derives from it. The Blueprint is generated locally by `Tools/create_anim_blueprint.py` from the engine's `ABP_Unarmed` and is not stored in the repository.
 - `Setup.bat`, a one-step setup to run after cloning: it finds the engine, downloads the Git LFS files, generates the solution, builds the editor target and installs the character models.
+- Ragdoll deaths: a killed enemy falls as a physics ragdoll and its corpse is removed after `CorpseLifetime` (10 seconds).
+- `UPhysicsControlComponent` on `AHKEnemy`, with the engine's PhysicsControl plugin enabled, for future partial ragdolls and hit reactions.
+- `UHKEnemyPool`, a pool owned by the horde generator that creates enemies in advance and reuses them. It is sized, per enemy class, to the largest total of one wave plus the next.
 
 ### Changed
+
+- Enemies are no longer spawned per wave or destroyed on death; they are taken from and returned to the pool. Projectiles ignore dead enemies for damage.
 
 - The arena is no longer built by code. `AHKGameMode` lost its arena generation and arena properties; the floor and walls are actors in `Test_HKArenaMap`.
 - Wave logic and wave settings moved out of `AHKGameMode` into the horde generator and its config asset. The game mode keeps the restart, and spawns a generator in levels that do not have one.

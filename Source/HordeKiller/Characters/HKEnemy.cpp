@@ -9,6 +9,9 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Characters/HKCharacter.h"
 #include "Hordes/HKHordeGenerator.h"
+#include "Managers/HKActorManager.h"
+#include "PhysicsControlComponent.h"
+#include "TimerManager.h"
 #include "UObject/ConstructorHelpers.h"
 
 AHKEnemy::AHKEnemy()
@@ -31,6 +34,9 @@ AHKEnemy::AHKEnemy()
 	{
 		BodyMesh->SetStaticMesh(CylinderMesh.Object);
 	}
+
+	// No controls yet; ready for partial ragdolls or hit reactions.
+	PhysicsControl = CreateDefaultSubobject<UPhysicsControlComponent>(TEXT("PhysicsControl"));
 
 	UCharacterMovementComponent* Movement = GetCharacterMovement();
 	Movement->bOrientRotationToMovement = true;
@@ -62,16 +68,66 @@ void AHKEnemy::BeginPlay()
 	if (HasBodyModel())
 	{
 		BodyMesh->SetVisibility(false);
-		SetBodyTint(HealthyColor);
-		return;
+	}
+	else
+	{
+		BodyMaterial = BodyMesh->CreateDynamicMaterialInstance(0);
 	}
 
-	// Per-instance material, so this enemy can change colour alone.
-	BodyMaterial = BodyMesh->CreateDynamicMaterialInstance(0);
+	SetBodyColor(HealthyColor);
+
+	// An enemy placed in a level by hand is in play from the start.
+	bActiveInPool = true;
+}
+
+void AHKEnemy::SetBodyColor(const FLinearColor& Color)
+{
+	SetBodyTint(Color);
 	if (BodyMaterial)
 	{
-		BodyMaterial->SetVectorParameterValue(TEXT("Color"), HealthyColor);
+		BodyMaterial->SetVectorParameterValue(TEXT("Color"), Color);
 	}
+}
+
+void AHKEnemy::ActivateFromPool(const FVector& Location)
+{
+	bActiveInPool = true;
+
+	Revive();
+	StopRagdoll();
+	SetBodyColor(HealthyColor);
+	LastAttackTime = -1000.f;
+
+	SetActorLocationAndRotation(Location, FRotator::ZeroRotator, false, nullptr, ETeleportType::TeleportPhysics);
+
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	GetCharacterMovement()->StopMovementImmediately();
+	GetCharacterMovement()->SetMovementMode(MOVE_Falling);
+
+	SetActorHiddenInGame(false);
+	SetActorTickEnabled(true);
+
+	// The manager only lists enemies that are in play.
+	UHKActorManager::Register(this);
+}
+
+void AHKEnemy::DeactivateToPool(const FVector& ParkLocation)
+{
+	bActiveInPool = false;
+
+	GetWorldTimerManager().ClearTimer(CorpseTimer);
+	StopRagdoll();
+
+	SetActorHiddenInGame(true);
+	SetActorTickEnabled(false);
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	GetCharacterMovement()->StopMovementImmediately();
+	GetCharacterMovement()->DisableMovement();
+
+	// Out of the way, so it is not an obstacle for the enemies that are in play.
+	SetActorLocation(ParkLocation, false, nullptr, ETeleportType::TeleportPhysics);
+
+	UHKActorManager::Unregister(this);
 }
 
 void AHKEnemy::Tick(float DeltaSeconds)
@@ -113,11 +169,7 @@ void AHKEnemy::HandleDamaged(float DamageApplied)
 {
 	Super::HandleDamaged(DamageApplied);
 
-	SetBodyTint(WoundedColor);
-	if (BodyMaterial)
-	{
-		BodyMaterial->SetVectorParameterValue(TEXT("Color"), WoundedColor);
-	}
+	SetBodyColor(WoundedColor);
 }
 
 void AHKEnemy::HandleDeath()
@@ -130,5 +182,39 @@ void AHKEnemy::HandleDeath()
 		Generator->NotifyEnemyKilled(this);
 	}
 
-	Destroy();
+	// A corpse does not chase, block or get pushed around as a character.
+	SetActorTickEnabled(false);
+	GetCharacterMovement()->StopMovementImmediately();
+	GetCharacterMovement()->DisableMovement();
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	// Without a body model there is nothing to ragdoll.
+	if (!HasBodyModel())
+	{
+		RemoveCorpse();
+		return;
+	}
+
+	// Push the ragdoll away from what killed it, with a little lift.
+	FVector Impulse = FVector::ZeroVector;
+	if (const AActor* Killer = GetLastDamageCauser())
+	{
+		Impulse = (GetActorLocation() - Killer->GetActorLocation()).GetSafeNormal2D() * DeathImpulse;
+		Impulse.Z = DeathImpulse * 0.3f;
+	}
+	StartRagdoll(Impulse);
+
+	GetWorldTimerManager().SetTimer(CorpseTimer, this, &AHKEnemy::RemoveCorpse, CorpseLifetime, false);
+}
+
+void AHKEnemy::RemoveCorpse()
+{
+	if (AHKHordeGenerator* Generator = HordeGenerator.Get())
+	{
+		Generator->ReleaseEnemy(this);
+	}
+	else
+	{
+		Destroy();
+	}
 }

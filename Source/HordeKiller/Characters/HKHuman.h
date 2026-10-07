@@ -79,6 +79,23 @@ protected:
 	/** Called once when health reaches zero, after the character has been marked as dead. Does nothing by default. */
 	virtual void HandleDeath();
 
+	/** Restores full health and clears the dead state, so the character can be used again. */
+	void Revive();
+
+	/**
+	 * Turns the body model into a ragdoll: its bones stop following the animation and are simulated by
+	 * the physics engine, using the model's physics asset. Has no effect if there is no body model.
+	 *
+	 * @param Impulse Velocity change, in cm/s, given to the whole body as the ragdoll starts.
+	 */
+	void StartRagdoll(const FVector& Impulse);
+
+	/** Ends the ragdoll: stops the simulation and puts the body back on the capsule, following the animation. */
+	void StopRagdoll();
+
+	/** @return The actor that dealt the most recent damage, or nullptr if it no longer exists. */
+	AActor* GetLastDamageCauser() const { return LastDamageCauser.Get(); }
+
 	/**
 	 * Tints the body model. Has no effect if there is no body model.
 	 *
@@ -109,6 +126,12 @@ private:
 	 * @return True if the model was found and applied.
 	 */
 	bool ApplyBodyModel();
+
+	/** Attaches the mesh component to the capsule with its feet at the bottom, facing forward. */
+	void PlaceBodyOnCapsule();
+
+	/** The actor that dealt the most recent damage. Weak, because projectiles destroy themselves on impact. */
+	TWeakObjectPtr<AActor> LastDamageCauser;
 
 	/** Current health. Set from MaxHealth in BeginPlay. */
 	float Health = 0.f;

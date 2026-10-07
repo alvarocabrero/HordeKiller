@@ -7,6 +7,7 @@
 #include "HKHordeGenerator.generated.h"
 
 class AHKEnemy;
+class UHKEnemyPool;
 class UHKHordeConfig;
 
 /**
@@ -20,8 +21,14 @@ class UHKHordeConfig;
  * To give a level its own horde, place one of these actors in it and assign that level's config asset.
  * If a level has no generator, the game mode spawns one with its default config.
  *
- * Enemies are spawned in a ring around the player and inside a square area centred on this actor.
- * Each enemy is told which generator spawned it, which is how it reports its death back to it.
+ * Enemies appear in a ring around the player and inside a square area centred on this actor.
+ * Each enemy is told which generator it belongs to, which is how it reports its death back to it.
+ *
+ * Enemies are not spawned for each wave. The generator owns a pool (UHKEnemyPool) that creates them
+ * in advance and reuses them. The pool is sized from the config: for each enemy class, the largest
+ * total of one wave plus the wave after it. Two waves, because the corpses of a wave are still in
+ * play when the next one arrives. In endless mode, where waves keep growing, the pool is topped up
+ * to the same rule before each wave starts.
  */
 UCLASS()
 class HORDEKILLER_API AHKHordeGenerator : public AActor
@@ -45,6 +52,16 @@ public:
 	 * @param Enemy The enemy that died.
 	 */
 	void NotifyEnemyKilled(AHKEnemy* Enemy);
+
+	/**
+	 * Called by an enemy when its corpse is to be removed. Puts the enemy back in the pool.
+	 *
+	 * @param Enemy The enemy to take out of play.
+	 */
+	void ReleaseEnemy(AHKEnemy* Enemy);
+
+	/** @return The pool this generator takes its enemies from. */
+	UHKEnemyPool* GetEnemyPool() const { return EnemyPool; }
 
 	/**
 	 * Changes the horde configuration. Meant to be called before the horde starts.
@@ -96,6 +113,17 @@ protected:
 	 * @return A point between the config's two spawn radii from Center, kept inside the spawn area.
 	 */
 	FVector PickSpawnLocation(const FVector& Center) const;
+
+	/**
+	 * Makes sure the pool holds enough enemies of each class for a wave and the wave after it.
+	 *
+	 * @param WaveNumber Number of the first of the two waves, starting at 1.
+	 */
+	void EnsurePoolForWave(int32 WaveNumber);
+
+	/** Pool that creates the enemies in advance and reuses them between waves. */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Horde")
+	TObjectPtr<UHKEnemyPool> EnemyPool;
 
 	/** Waves and spawn settings of this horde. Assign a different asset in each level to give each one its own horde. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Horde")

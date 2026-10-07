@@ -8,6 +8,8 @@ The project contains no art assets of its own. The arena, the weapon and the pro
 
 - **Physics projectile weapon.** Every shot is a simulated rigid body launched with an impulse. Projectiles drop with gravity, bounce off the floor and walls, and knock enemies back.
 - **Two-hit enemies.** Enemies have 2 health and each projectile deals 1 damage. They turn from red to orange after the first hit.
+- **Ragdoll deaths.** A killed enemy falls as a physics ragdoll, pushed by the shot, and its corpse is removed after 10 seconds.
+- **Pooled enemies.** Enemies are created in advance and reused between waves instead of being spawned and destroyed.
 - **Humanoid characters.** The player and the enemies use Epic's mannequins with walk and run animations.
 - **Chasing horde.** Enemies run straight at the player, spread out around each other and deal damage on contact.
 - **Data-driven waves.** A horde generator spawns waves in a ring around the player. The waves are described in a data asset, and each level can have its own.
@@ -132,6 +134,8 @@ Every gameplay value is an editable property. For the player and the enemy, edit
 | `AttackRange` | 110 | Distance at which an attack lands |
 | `AttackCooldown` | 1 | Time between attacks |
 | `HealthyColor` / `WoundedColor` | red / orange | Body colour before and after the first hit |
+| `CorpseLifetime` | 10 | Time the corpse stays after death before it is removed |
+| `DeathImpulse` | 500 | Speed given to the ragdoll at death, away from what killed the enemy |
 
 ### Waves (`UHKHordeConfig` data asset)
 
@@ -282,6 +286,7 @@ Source/
     Hordes/
       HKHordeGenerator.*      Actor that spawns the waves and tracks their progress
       HKHordeConfig.*         Data asset class that describes a horde's waves
+      HKEnemyPool.*           Pool that creates enemies in advance and reuses them
     Managers/
       HKActorManager.*        Registry of the actors in the match, with static access
     UI/
@@ -343,6 +348,26 @@ A level that has a generator uses that generator and its config; `Test_HKArenaMa
 | `SpawnAreaHalfSize` | 0 | Half the side of the square spawn area centred on the generator; 0 is unlimited |
 | `SpawnHeightOffset` | 100 | Height above the generator at which enemies spawn |
 
+### Enemy pool
+
+The generator does not spawn an enemy actor each time one is needed. It owns a pool, `UHKEnemyPool`, that creates the enemies in advance, hands them out when a wave starts and takes them back when their corpse is removed. A reused enemy is the same actor, reset: full health, standing, original colour.
+
+How many are created:
+
+- **At the start**, for each enemy class, the largest total of one wave plus the wave after it, over all the waves in the config. Two consecutive waves are counted because the corpses of one wave are still in the level, for `CorpseLifetime` seconds, when the next wave arrives.
+- **In endless mode**, where waves keep growing, the pool is topped up to the same rule before each wave: the wave that is starting plus the following one.
+- **If it still runs out**, it creates the missing enemies on the spot and writes a warning to the Output Log under `LogHKEnemyPool`. This happens when waves are cleared so quickly that corpses of more than two waves are in the level at once.
+
+Enemies waiting in the pool are hidden, do not collide or tick, and are parked below the level. They are also unregistered from the [actor manager](#actor-manager), so `UHKActorManager::GetActors<AHKEnemy>()` returns only enemies that are in play, corpses included.
+
+### Enemy death
+
+When an enemy's health reaches zero it stops moving and attacking, its capsule stops colliding, and its body becomes a ragdoll: the bones are simulated by the physics engine using the mannequin's physics asset (`PA_Mannequin`), with an initial push away from whatever killed it. Projectiles no longer damage it, but still collide with it. After `CorpseLifetime` seconds the enemy returns to the pool.
+
+Without the character models installed there is no ragdoll: the placeholder enemy returns to the pool as soon as it dies.
+
+`AHKEnemy` also has a `UPhysicsControlComponent`, from the engine's PhysicsControl plugin, which is experimental in Unreal Engine 5.6. It is there for partial ragdolls and physical hit reactions, and has no controls set up yet; the death ragdoll does not use it.
+
 From code, the generator in use is available as `AHKGameMode::GetHordeGenerator()`, and exposes `StartHorde()`, `StopHorde()`, `GetCurrentWave()`, `GetEnemiesAlive()`, `GetKills()` and `IsHordeComplete()`. Its events are written to the Output Log under `LogHKHorde`.
 
 `Tools/create_horde_configs.py` generated the default asset and can recreate it; run it the same way as the Blueprint script. It skips assets that already exist.
@@ -390,7 +415,7 @@ int32 Total                = UHKActorManager::GetActorCount();
 
 Things to know:
 
-- **It only holds actors that subscribed.** Those are the project's own classes: the player and the enemies (through their shared base class `AHKHuman`), the projectiles, the game mode and the HUD. Engine actors with no code of ours, such as lights, the player controller or the arena's floor and walls, are not in the list.
+- **It only holds actors that subscribed.** Those are the project's own classes: the player and the enemies (through their shared base class `AHKHuman`), the projectiles, the horde generator, the game mode and the HUD. Enemies waiting in the pool are not listed. Engine actors with no code of ours, such as lights, the player controller or the arena's floor and walls, are not in the list.
 - **A new actor class must subscribe too.** Add the two calls shown above to its `BeginPlay` and `EndPlay`, unless it inherits from a class that already does. An actor that does not register is invisible to the manager.
 - **It lives as long as the level.** It is a world subsystem, created with the game world and destroyed with it, so the list starts empty after a level load or restart.
 - **The static functions refer to the game that is running.** Outside a running game, such as in the editor before pressing Play, they return empty results.
@@ -412,7 +437,7 @@ The source files are commented in detail and are the best reference for the spec
 ## Known limitations
 
 - Enemies do not use navigation. They walk in a straight line towards the player and will get stuck on obstacles if any are added.
-- Characters use the stock mannequins with locomotion animations only: there are no attack, hit or death animations, and enemies disappear when killed. The arena and the weapon are placeholder shapes, and there are no effects or sounds.
+- Characters use the stock mannequins with locomotion animations only: there are no attack or hit animations. The arena and the weapon are placeholder shapes, and there are no effects or sounds.
 - The player has no first-person arms or weapon model; the weapon is a floating bar.
 - There is no menu, pause screen or score saving.
 - Single-player only.
