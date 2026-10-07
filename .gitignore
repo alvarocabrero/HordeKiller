@@ -12,3 +12,4 @@ Build/
 .vscode/
 Plugins/*/Binaries/
 Plugins/*/Intermediate/
+enc_temp_folder/
