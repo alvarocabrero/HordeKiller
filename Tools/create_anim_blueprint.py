@@ -3,9 +3,11 @@
 
 Animation graphs cannot be built from script, so the Blueprint is not created empty. It starts as a
 copy of the engine's unarmed locomotion Blueprint (ABP_Unarmed, part of Epic's mannequin content) and
-is then re-parented to the project's C++ class UHKAnimInstanceHuman. Because it derives from Epic's
-asset, it is kept out of the repository like the mannequins themselves, and each developer generates
-it locally. Run install_mannequins.py first, then:
+is then re-parented to the project's C++ class UHKAnimInstanceHuman.
+
+ABP_HKHuman is stored in the repository, already rewired by hand to read the C++ variables, so this
+script is only needed to recreate it if it is deleted. The recreated Blueprint is not rewired. Run
+install_mannequins.py first, then:
 
     UnrealEditor-Cmd.exe <path>\\HordeKiller.uproject -run=pythonscript -script=<path>\\Tools\\create_anim_blueprint.py
 

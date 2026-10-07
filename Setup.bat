@@ -8,8 +8,8 @@ rem   1. Finds the Unreal Engine installation.
 rem   2. Downloads the Git LFS files (Blueprints, levels, data assets).
 rem   3. Generates the Visual Studio solution.
 rem   4. Builds the editor target.
-rem   5. Copies Epic's mannequins from the engine and generates the animation Blueprint. These are
-rem      Epic content, so they are not stored in the repository.
+rem   5. Copies Epic's mannequins from the engine. They are Epic content, so they are not stored in
+rem      the repository. Also recreates the animation Blueprint if it is missing.
 rem
 rem It is safe to run again: every step skips what is already done.
 rem

@@ -48,7 +48,7 @@ The project contains no art assets of its own. The arena, the weapon and the pro
 | 2 | Downloads the Git LFS files (Blueprints, levels, data assets) |
 | 3 | Generates the Visual Studio solution |
 | 4 | Builds the editor target (`HordeKillerEditor`, Win64, Development) |
-| 5 | Copies Epic's mannequins from the engine and generates the animation Blueprint, which are not stored in the repository |
+| 5 | Copies Epic's mannequins from the engine, which are not stored in the repository |
 
 It finds the engine through the Epic Games Launcher's list of installed engines. If your engine is somewhere it cannot find, pass the folder: `Setup.bat "D:\Engines\UE_5.6"`, or set the `UE_ROOT` environment variable.
 
@@ -185,7 +185,7 @@ The player and the enemies are humanoids: Epic's mannequins, **Quinn** for the p
 
 ### Where the models come from
 
-The mannequins are Epic Games content, covered by the Unreal Engine EULA and not by this project's license. They are **not stored in this repository**: `Content/Characters` is listed in `.gitignore`. They ship with every engine installation, and `Tools/install_mannequins.py` copies them from there into the project (about 125 MB). `Setup.bat` runs it for you, as described in [Getting started](#getting-started). It never overwrites files that are already there.
+The mannequins are Epic Games content, covered by the Unreal Engine EULA and not by this project's license. They are **not stored in this repository**: `Content/Characters/Mannequins` is listed in `.gitignore`. They ship with every engine installation, and `Tools/install_mannequins.py` copies them from there into the project (about 125 MB). `Setup.bat` runs it for you, as described in [Getting started](#getting-started). It never overwrites files that are already there.
 
 ### Animation
 
@@ -204,11 +204,9 @@ Animation is split between a C++ class and a Blueprint:
 
 - **`ABP_HKHuman`** (`Content/Characters/Animation`) is the animation Blueprint used by both. Its parent class is `UHKAnimInstanceHuman`.
 
-Animation graphs cannot be built from a script, so `ABP_HKHuman` is not written from scratch: `Tools/create_anim_blueprint.py` copies the engine's `ABP_Unarmed` and re-parents the copy to `UHKAnimInstanceHuman`. Since it derives from Epic's asset, it is kept out of the repository like the mannequins and generated locally.
+The Blueprint is stored in the repository. It was rewired by hand so that its anim graph and its state transitions read the C++ variables above instead of computing their own. It uses the animations of Epic's mannequins, which are not in the repository, so it only animates once those are installed.
 
-As generated, its graph still works the way Epic's does: its own event graph computes its own variables and the anim graph reads those. Epic's Blueprint uses some of the same names as the C++ class, so when the copy is re-parented the editor renames the Blueprint's clashing variables by adding `_0` (`GroundSpeed_0`, `Direction_0`) and reports it as a warning; that is expected. The C++ variables are computed alongside and are available in the graph, but nothing reads them yet.
-
-To finish moving the logic to C++, open `ABP_HKHuman` in the editor, replace each use of the Blueprint's own variables in the anim graph and its transitions with the C++ variable from the **Human** category, then delete the event graph nodes and the Blueprint's own variables. This has to be done by hand, and because the Blueprint is not stored in the repository, it has to be done on each machine.
+It started as a copy of the engine's `ABP_Unarmed`, re-parented to `UHKAnimInstanceHuman` and then rewired by hand in the editor, because animation graphs cannot be built from a script. `Tools/create_anim_blueprint.py` does the copy and the re-parenting, and exists only to recreate the Blueprint if it is ever deleted: `Setup.bat` skips it when the Blueprint is there. A Blueprint recreated that way is not rewired. Its own event graph computes its own variables again, and the editor renames the ones that clash with the C++ names by adding `_0`, with a warning; replacing them with the C++ variables has to be redone by hand.
 
 The C++ variables used to be named with a `Human` prefix (`HumanGroundSpeed` and so on). `Config/DefaultEngine.ini` has redirects from those names, so a Blueprint that was wired to them keeps working.
 
@@ -270,7 +268,7 @@ Tools/
   create_horde_configs.py     Script that generates the horde config data assets
   create_arena_level.py       Script that generates the arena level and its materials
   install_mannequins.py       Script that copies Epic's mannequins from the engine (not in git)
-  create_anim_blueprint.py    Script that generates ABP_HKHuman from the engine's ABP (not in git)
+  create_anim_blueprint.py    Script that recreates ABP_HKHuman from the engine's ABP if it is deleted
 Source/
   HordeKiller.Target.cs       Build target for the standalone game
   HordeKillerEditor.Target.cs Build target for the editor
