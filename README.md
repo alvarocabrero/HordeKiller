@@ -156,6 +156,8 @@ Source/
       HKProjectile.*          Physics projectile
     Game/
       HKGameMode.*            Arena generation, waves, counters, restart
+    Managers/
+      HKActorManager.*        Registry of every actor in the match, with static access
     UI/
       HKHUD.*                 Crosshair and on-screen counters
 ```
@@ -174,6 +176,37 @@ ACharacter (engine)
 ```
 
 `AHKHuman` owns the damage flow. Subclasses do not override `TakeDamage`; they override `HandleDamaged` (a hit they survive) and `HandleDeath` (health reached zero) to add their own reaction.
+
+## Actor manager
+
+`UHKActorManager` keeps a reference to every actor that exists in the match and makes them available through static functions, from any class and without needing a pointer to the manager:
+
+```cpp
+#include "Managers/HKActorManager.h"
+
+TArray<AHKEnemy*> Enemies = UHKActorManager::GetActors<AHKEnemy>();     // all enemies alive
+AHKCharacter* Player      = UHKActorManager::GetFirstActor<AHKCharacter>(); // the player, or nullptr
+TArray<AActor*> Everything = UHKActorManager::GetAllActors();
+int32 Total                = UHKActorManager::GetActorCount();
+```
+
+| Function | Returns |
+| --- | --- |
+| `GetActors<T>()` | Every registered actor of class `T`, including subclasses and Blueprints |
+| `GetFirstActor<T>()` | The oldest registered actor of class `T`, or `nullptr` |
+| `GetAllActors()` | Every registered actor |
+| `GetActorCount()` | Number of registered actors |
+| `Get()` | The manager itself, or `nullptr` if no game is running |
+
+Things to know:
+
+- **Registration is automatic.** The manager listens to the world's spawn and destroy notifications, so actors are added when they are spawned and removed when they are destroyed. Actors placed in the level by hand are added when play begins. Nothing has to register itself.
+- **It tracks everything**, not only this project's classes: the game mode, the player controller, the HUD, lights and so on are in the list too. Use `GetActors<T>()` to get only what you need.
+- **It lives as long as the level.** It is a world subsystem, created with the game world and destroyed with it, so the list starts empty after a level load or restart.
+- **The static functions refer to the game that is running.** Outside a running game, such as in the editor before pressing Play, they return empty results.
+- **Queries scan the whole list.** That is fine for occasional use; code that needs the result every frame should store it.
+
+The functions are C++ only for now; they are not exposed to Blueprint graphs.
 
 ## How it works
 
