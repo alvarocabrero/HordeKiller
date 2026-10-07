@@ -21,4 +21,15 @@ class HORDEKILLER_API AHKHUD : public AHUD
 public:
 	/** Called by the engine once per frame to draw the HUD. Everything is redrawn from scratch each time. */
 	virtual void DrawHUD() override;
+
+protected:
+	/** Registers the HUD with the actor manager once it is in the world. */
+	virtual void BeginPlay() override;
+
+	/**
+	 * Unregisters the HUD from the actor manager.
+	 *
+	 * @param EndPlayReason Why play is ending (level change, game exit...).
+	 */
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 };

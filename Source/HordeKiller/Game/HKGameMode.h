@@ -50,6 +50,13 @@ protected:
 	/** Builds the arena and schedules the first wave. */
 	virtual void BeginPlay() override;
 
+	/**
+	 * Unregisters the game mode from the actor manager.
+	 *
+	 * @param EndPlayReason Why play is ending (level change, game exit...).
+	 */
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
 	/** Spawns a floor and four walls made of scaled cubes, so the game is playable on any map. */
 	void BuildArena();
 

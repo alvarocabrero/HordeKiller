@@ -1,8 +1,6 @@
 // Copyright (c) 2026 Álvaro Cabrero Barros. Licensed under the MIT License. See LICENSE in the repository root.
 
 #include "Managers/HKActorManager.h"
-#include "Engine/World.h"
-#include "EngineUtils.h"
 #include "GameFramework/Actor.h"
 
 // Storage for the static member declared in the header.
@@ -12,6 +10,27 @@ UHKActorManager* UHKActorManager::Get()
 {
 	// Get() on a weak pointer returns nullptr once the object it pointed to has been destroyed.
 	return Instance.Get();
+}
+
+void UHKActorManager::Register(AActor* Actor)
+{
+	UHKActorManager* Manager = Get();
+	if (Manager && Actor)
+	{
+		// AddUnique makes a repeated call harmless, for example if a subclass registers again.
+		Manager->Actors.AddUnique(Actor);
+	}
+}
+
+void UHKActorManager::Unregister(AActor* Actor)
+{
+	// The manager can already be gone when this is called: at the end of a level, actors end play
+	// while the world is being torn down. In that case there is nothing left to remove from.
+	if (UHKActorManager* Manager = Get())
+	{
+		// Remove keeps the remaining actors in registration order, which GetFirstActor relies on.
+		Manager->Actors.Remove(Actor);
+	}
 }
 
 TArray<AActor*> UHKActorManager::GetAllActors()
@@ -45,42 +64,14 @@ void UHKActorManager::Initialize(FSubsystemCollectionBase& Collection)
 {
 	Super::Initialize(Collection);
 
-	// From now on the static functions refer to this world's manager. A level restart creates a new
-	// world, and with it a new manager that takes over here.
+	// From now on the static functions refer to this world's manager. This happens while the world is
+	// being set up, before any actor begins play, so every actor finds the manager ready when it
+	// registers. A level restart creates a new world, and with it a new manager that takes over here.
 	Instance = this;
-
-	if (UWorld* World = GetWorld())
-	{
-		// The world announces every actor it spawns and destroys. Subscribing here, before any gameplay
-		// actor exists, means nothing spawned during the match is missed.
-		ActorSpawnedHandle = World->AddOnActorSpawnedHandler(
-			FOnActorSpawned::FDelegate::CreateUObject(this, &UHKActorManager::HandleActorSpawned));
-		ActorDestroyedHandle = World->AddOnActorDestroyedHandler(
-			FOnActorDestroyed::FDelegate::CreateUObject(this, &UHKActorManager::HandleActorDestroyed));
-	}
-}
-
-void UHKActorManager::OnWorldBeginPlay(UWorld& InWorld)
-{
-	Super::OnWorldBeginPlay(InWorld);
-
-	// Actors saved in the map are loaded with it, not spawned, so the spawn notification never fires
-	// for them. This pass picks them up. AddUnique skips the ones that were spawned before play began
-	// (game mode, player controller, player) and are therefore registered already.
-	for (TActorIterator<AActor> It(&InWorld); It; ++It)
-	{
-		Actors.AddUnique(*It);
-	}
 }
 
 void UHKActorManager::Deinitialize()
 {
-	if (UWorld* World = GetWorld())
-	{
-		World->RemoveOnActorSpawnedHandler(ActorSpawnedHandle);
-		World->RemoveOnActorDestroyedHandler(ActorDestroyedHandle);
-	}
-
 	Actors.Empty();
 
 	// Only clear the static instance if it is still this manager. During a level change the new world's
@@ -91,18 +82,4 @@ void UHKActorManager::Deinitialize()
 	}
 
 	Super::Deinitialize();
-}
-
-void UHKActorManager::HandleActorSpawned(AActor* Actor)
-{
-	if (Actor)
-	{
-		Actors.AddUnique(Actor);
-	}
-}
-
-void UHKActorManager::HandleActorDestroyed(AActor* Actor)
-{
-	// Keeps the remaining actors in registration order, which GetFirstActor relies on to return the oldest.
-	Actors.Remove(Actor);
 }

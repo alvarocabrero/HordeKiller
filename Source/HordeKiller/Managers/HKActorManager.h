@@ -7,17 +7,18 @@
 #include "HKActorManager.generated.h"
 
 /**
- * Registry of every actor that exists in the current match.
+ * Registry of the actors that take part in the current match.
  *
- * The manager keeps a reference to each actor from the moment it is spawned until it is destroyed:
- * the player, the enemies, the projectiles, the arena blocks, and also the engine's own actors such
- * as the game mode, the player controller and the HUD. Actors placed in the level by hand are
- * registered when play begins.
- *
- * Registration is automatic. The manager listens to the world's spawn and destroy notifications, so
- * no actor has to register or unregister itself.
+ * Actors subscribe themselves: each of the project's actor classes calls Register on the manager when
+ * it begins play and Unregister when it ends play. The manager does not look for actors on its own,
+ * so it holds exactly the actors that chose to subscribe: the player, the enemies, the projectiles,
+ * the game mode and the HUD. Engine actors that have no code of ours, such as lights or the arena
+ * blocks, are not in it.
  *
  * Everything is reached through static functions, from any class and without a pointer to the manager:
+ *
+ *     UHKActorManager::Register(this);       // in the actor's BeginPlay
+ *     UHKActorManager::Unregister(this);     // in the actor's EndPlay
  *
  *     TArray<AHKEnemy*> Enemies = UHKActorManager::GetActors<AHKEnemy>();
  *     AHKCharacter* Player = UHKActorManager::GetFirstActor<AHKCharacter>();
@@ -26,10 +27,11 @@
  * It is a world subsystem: the engine creates one together with the game world and destroys it with
  * it, so the registry starts empty on every level load or restart. The static functions refer to the
  * manager of the game world that is currently running. Outside a running game (for example in the
- * editor before pressing Play) there is no manager and they return empty results.
+ * editor before pressing Play) there is no manager: queries return empty results and Register and
+ * Unregister do nothing.
  *
- * Queries walk the whole list, so their cost grows with the number of actors alive. That is fine for
- * occasional use; code that needs a result every frame should keep it instead of asking again.
+ * Queries walk the whole list, so their cost grows with the number of actors registered. That is fine
+ * for occasional use; code that needs a result every frame should keep it instead of asking again.
  */
 UCLASS()
 class HORDEKILLER_API UHKActorManager : public UWorldSubsystem
@@ -43,7 +45,24 @@ public:
 	static UHKActorManager* Get();
 
 	/**
-	 * @return A copy of the list of all registered actors, in the order they were registered. Empty if no game is running.
+	 * Adds an actor to the registry. Meant to be called by the actor itself from BeginPlay.
+	 * Registering an actor that is already registered has no effect.
+	 *
+	 * @param Actor The actor subscribing itself. Ignored if null.
+	 */
+	static void Register(AActor* Actor);
+
+	/**
+	 * Removes an actor from the registry. Meant to be called by the actor itself from EndPlay, which
+	 * the engine runs both when the actor is destroyed and when the level ends.
+	 * Unregistering an actor that is not registered has no effect.
+	 *
+	 * @param Actor The actor unsubscribing itself.
+	 */
+	static void Unregister(AActor* Actor);
+
+	/**
+	 * @return A copy of the list of all registered actors, in the order they registered. Empty if no game is running.
 	 */
 	static TArray<AActor*> GetAllActors();
 
@@ -56,7 +75,7 @@ public:
 	 * Finds every registered actor of a given class, including its subclasses and Blueprints.
 	 *
 	 * @tparam T Actor class to look for, for example AHKEnemy.
-	 * @return The matching actors, in the order they were registered. Empty if there are none.
+	 * @return The matching actors, in the order they registered. Empty if there are none.
 	 */
 	template <typename T>
 	static TArray<T*> GetActors()
@@ -81,7 +100,7 @@ public:
 	 * Intended for classes with a single instance, such as the player.
 	 *
 	 * @tparam T Actor class to look for, for example AHKCharacter.
-	 * @return The oldest matching actor, or nullptr if there is none.
+	 * @return The matching actor that registered earliest, or nullptr if there is none.
 	 */
 	template <typename T>
 	static T* GetFirstActor()
@@ -100,21 +119,14 @@ public:
 	}
 
 	/**
-	 * Called by the engine when the world is created. Starts listening for spawned and destroyed actors.
+	 * Called by the engine when the world is created. Makes this manager the one the static functions use.
 	 *
 	 * @param Collection Other subsystems of the same world, for declaring dependencies. Not used here.
 	 */
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 
-	/** Called by the engine when the world is destroyed. Stops listening and empties the registry. */
+	/** Called by the engine when the world is destroyed. Empties the registry and releases the static instance. */
 	virtual void Deinitialize() override;
-
-	/**
-	 * Called by the engine when play begins. Registers the actors that were already in the level.
-	 *
-	 * @param InWorld The world that is starting play.
-	 */
-	virtual void OnWorldBeginPlay(UWorld& InWorld) override;
 
 protected:
 	/**
@@ -126,29 +138,9 @@ protected:
 	virtual bool DoesSupportWorldType(const EWorldType::Type WorldType) const override;
 
 private:
-	/**
-	 * Adds an actor to the registry.
-	 *
-	 * @param Actor The actor that has just been spawned.
-	 */
-	void HandleActorSpawned(AActor* Actor);
-
-	/**
-	 * Removes an actor from the registry.
-	 *
-	 * @param Actor The actor that is being destroyed.
-	 */
-	void HandleActorDestroyed(AActor* Actor);
-
-	/** Every actor alive in this world, in registration order. UPROPERTY makes the references visible to the garbage collector. */
+	/** Every registered actor, in registration order. UPROPERTY makes the references visible to the garbage collector. */
 	UPROPERTY()
 	TArray<TObjectPtr<AActor>> Actors;
-
-	/** Handle of the world's "actor spawned" subscription, needed to cancel it. */
-	FDelegateHandle ActorSpawnedHandle;
-
-	/** Handle of the world's "actor destroyed" subscription, needed to cancel it. */
-	FDelegateHandle ActorDestroyedHandle;
 
 	/**
 	 * The manager of the running game world, which is what makes static access possible.

@@ -9,7 +9,7 @@ All notable changes to this project are listed here. The format follows [Keep a 
 - MIT license, README, contributing guide and this changelog.
 - Detailed comments on all source and configuration files.
 - Blueprints `BP_HKCharacter` and `BP_HKEnemy`, derived from the C++ player and enemy classes, and the script that generates them (`Tools/create_blueprints.py`). The game mode uses them when present and falls back to the C++ classes otherwise.
-- `UHKActorManager`, a world subsystem that keeps a reference to every actor in the match and exposes them through static functions.
+- `UHKActorManager`, a world subsystem that keeps a reference to the actors in the match and exposes them through static functions. Actors subscribe themselves in `BeginPlay` and unsubscribe in `EndPlay`.
 
 ### Changed
 

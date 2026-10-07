@@ -1,14 +1,28 @@
 // Copyright (c) 2026 Álvaro Cabrero Barros. Licensed under the MIT License. See LICENSE in the repository root.
 
 #include "Characters/HKHuman.h"
+#include "Managers/HKActorManager.h"
 
 void AHKHuman::BeginPlay()
 {
 	Super::BeginPlay();
 
+	// Every actor of the project subscribes itself to the manager. Doing it here covers the player and
+	// the enemies at once, since both inherit from this class.
+	UHKActorManager::Register(this);
+
 	// Read MaxHealth here rather than in the constructor so that values set by a subclass constructor,
 	// a child Blueprint or a placed instance are respected.
 	Health = MaxHealth;
+}
+
+void AHKHuman::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	// EndPlay runs whenever the actor leaves the game, whatever the reason, so the manager never keeps
+	// a reference to a character that no longer exists.
+	UHKActorManager::Unregister(this);
+
+	Super::EndPlay(EndPlayReason);
 }
 
 float AHKHuman::TakeDamage(float DamageAmount, const FDamageEvent& DamageEvent, AController* EventInstigator,

@@ -10,6 +10,7 @@
 #include "Characters/HKCharacter.h"
 #include "Characters/HKEnemy.h"
 #include "UI/HKHUD.h"
+#include "Managers/HKActorManager.h"
 #include "TimerManager.h"
 #include "UObject/ConstructorHelpers.h"
 
@@ -41,9 +42,19 @@ AHKGameMode::AHKGameMode()
 	}
 }
 
+void AHKGameMode::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	UHKActorManager::Unregister(this);
+
+	Super::EndPlay(EndPlayReason);
+}
+
 void AHKGameMode::BeginPlay()
 {
 	Super::BeginPlay();
+
+	// Every actor of the project subscribes itself to the manager, the game mode included.
+	UHKActorManager::Register(this);
 
 	// Records which classes are in use, which shows at a glance whether the Blueprints were picked up.
 	UE_LOG(LogHordeKiller, Log, TEXT("Player class: %s, enemy class: %s"),

@@ -5,6 +5,7 @@
 #include "Engine/StaticMesh.h"
 #include "Kismet/GameplayStatics.h"
 #include "Characters/HKEnemy.h"
+#include "Managers/HKActorManager.h"
 #include "UObject/ConstructorHelpers.h"
 
 AHKProjectile::AHKProjectile()
@@ -52,6 +53,22 @@ AHKProjectile::AHKProjectile()
 	Mesh->BodyInstance.bUseCCD = true;
 
 	Mesh->OnComponentHit.AddDynamic(this, &AHKProjectile::OnHit);
+}
+
+void AHKProjectile::BeginPlay()
+{
+	Super::BeginPlay();
+
+	// Every actor of the project subscribes itself to the manager.
+	UHKActorManager::Register(this);
+}
+
+void AHKProjectile::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	// Covers both ways a projectile disappears: hitting an enemy and running out of life span.
+	UHKActorManager::Unregister(this);
+
+	Super::EndPlay(EndPlayReason);
 }
 
 void AHKProjectile::Launch(const FVector& Direction)

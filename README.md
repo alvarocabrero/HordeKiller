@@ -179,7 +179,25 @@ ACharacter (engine)
 
 ## Actor manager
 
-`UHKActorManager` keeps a reference to every actor that exists in the match and makes them available through static functions, from any class and without needing a pointer to the manager:
+`UHKActorManager` keeps a reference to the actors that take part in the match and makes them available through static functions, from any class and without needing a pointer to the manager.
+
+Actors subscribe themselves. Each actor class of the project registers in `BeginPlay` and unregisters in `EndPlay`:
+
+```cpp
+void AHKProjectile::BeginPlay()
+{
+	Super::BeginPlay();
+	UHKActorManager::Register(this);
+}
+
+void AHKProjectile::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	UHKActorManager::Unregister(this);
+	Super::EndPlay(EndPlayReason);
+}
+```
+
+Any class can then query the registry:
 
 ```cpp
 #include "Managers/HKActorManager.h"
@@ -192,6 +210,8 @@ int32 Total                = UHKActorManager::GetActorCount();
 
 | Function | Returns |
 | --- | --- |
+| `Register(Actor)` | Nothing. Adds the actor; called by the actor itself in `BeginPlay` |
+| `Unregister(Actor)` | Nothing. Removes the actor; called by the actor itself in `EndPlay` |
 | `GetActors<T>()` | Every registered actor of class `T`, including subclasses and Blueprints |
 | `GetFirstActor<T>()` | The oldest registered actor of class `T`, or `nullptr` |
 | `GetAllActors()` | Every registered actor |
@@ -200,8 +220,8 @@ int32 Total                = UHKActorManager::GetActorCount();
 
 Things to know:
 
-- **Registration is automatic.** The manager listens to the world's spawn and destroy notifications, so actors are added when they are spawned and removed when they are destroyed. Actors placed in the level by hand are added when play begins. Nothing has to register itself.
-- **It tracks everything**, not only this project's classes: the game mode, the player controller, the HUD, lights and so on are in the list too. Use `GetActors<T>()` to get only what you need.
+- **It only holds actors that subscribed.** Those are the project's own classes: the player and the enemies (through their shared base class `AHKHuman`), the projectiles, the game mode and the HUD. Engine actors with no code of ours, such as lights, the player controller or the arena blocks, are not in the list.
+- **A new actor class must subscribe too.** Add the two calls shown above to its `BeginPlay` and `EndPlay`, unless it inherits from a class that already does. An actor that does not register is invisible to the manager.
 - **It lives as long as the level.** It is a world subsystem, created with the game world and destroyed with it, so the list starts empty after a level load or restart.
 - **The static functions refer to the game that is running.** Outside a running game, such as in the editor before pressing Play, they return empty results.
 - **Queries scan the whole list.** That is fine for occasional use; code that needs the result every frame should store it.

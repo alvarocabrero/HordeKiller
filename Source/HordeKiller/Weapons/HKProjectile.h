@@ -42,6 +42,16 @@ public:
 	virtual void Tick(float DeltaSeconds) override;
 
 protected:
+	/** Registers the projectile with the actor manager once it is in the world. */
+	virtual void BeginPlay() override;
+
+	/**
+	 * Unregisters the projectile from the actor manager.
+	 *
+	 * @param EndPlayReason Why play is ending for this actor (destroyed, life span expired, level change...).
+	 */
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
 	/**
 	 * Called by the physics engine when the sphere collides with something that blocks it.
 	 *

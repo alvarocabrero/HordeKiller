@@ -47,8 +47,15 @@ public:
 	bool IsDead() const { return bDead; }
 
 protected:
-	/** Fills health from MaxHealth once the character is in the world. */
+	/** Fills health from MaxHealth and registers the character with the actor manager once it is in the world. */
 	virtual void BeginPlay() override;
+
+	/**
+	 * Unregisters the character from the actor manager.
+	 *
+	 * @param EndPlayReason Why play is ending for this actor (destroyed, level change, game exit...).
+	 */
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	/**
 	 * Called after the character takes damage and survives. Does nothing by default.

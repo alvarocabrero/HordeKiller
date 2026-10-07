@@ -6,6 +6,22 @@
 #include "Engine/Font.h"
 #include "Characters/HKCharacter.h"
 #include "Game/HKGameMode.h"
+#include "Managers/HKActorManager.h"
+
+void AHKHUD::BeginPlay()
+{
+	Super::BeginPlay();
+
+	// Every actor of the project subscribes itself to the manager, the HUD included.
+	UHKActorManager::Register(this);
+}
+
+void AHKHUD::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	UHKActorManager::Unregister(this);
+
+	Super::EndPlay(EndPlayReason);
+}
 
 void AHKHUD::DrawHUD()
 {
