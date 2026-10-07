@@ -12,13 +12,14 @@ class UHKHordeConfig;
 /**
  * Rules of the game.
  *
- * At the start of play it builds a walled arena out of basic shapes and makes sure the level has a
- * horde generator, which is the actor that spawns the waves of enemies. It also handles the end of
- * the game: when the player dies it stops the horde and restarts the level.
+ * At the start of play it makes sure the level has a horde generator, which is the actor that spawns
+ * the waves of enemies. It also handles the end of the game: when the player dies it stops the horde
+ * and restarts the level.
  *
- * The waves themselves are not configured here. They belong to AHKHordeGenerator and to the
- * UHKHordeConfig data asset it reads. If the level already contains a generator, that one is used as
- * it is; otherwise the game mode spawns one with DefaultHordeConfig.
+ * The level itself (floor, walls, lighting, player start) is not created here: it is a map asset, such
+ * as L_HKArena. The waves are not configured here either. They belong to AHKHordeGenerator and to the
+ * UHKHordeConfig data asset it reads. If the level contains a generator, that one is used as it is;
+ * otherwise the game mode spawns one with DefaultHordeConfig.
  *
  * It selects the player character and HUD classes too, so no Blueprint game mode is required. For the
  * player it uses the Blueprint BP_HKCharacter when it exists, and falls back to the C++ class otherwise.
@@ -42,7 +43,7 @@ public:
 	bool IsGameOver() const { return bGameOver; }
 
 protected:
-	/** Builds the arena and finds or creates the horde generator. */
+	/** Finds or creates the horde generator. */
 	virtual void BeginPlay() override;
 
 	/**
@@ -52,19 +53,11 @@ protected:
 	 */
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
-	/** Spawns a floor and four walls made of scaled cubes, so the game is playable on any map. */
-	void BuildArena();
-
 	/**
-	 * Spawns one box-shaped piece of the arena.
-	 *
-	 * @param Location World position of the centre of the box, in cm.
-	 * @param Size     Full extent of the box along X, Y and Z, in cm.
-	 * @param Color    Colour applied to the box.
+	 * Uses the horde generator placed in the level, or spawns one with DefaultHordeConfig if there is
+	 * none. A generator spawned this way sits at the world origin and has no spawn area limit, so levels
+	 * meant to be played should place their own.
 	 */
-	void SpawnArenaBlock(const FVector& Location, const FVector& Size, const FLinearColor& Color);
-
-	/** Uses the horde generator placed in the level, or spawns one with DefaultHordeConfig if there is none. */
 	void SetUpHordeGenerator();
 
 	/** Reloads the current level, which resets everything to its initial state. */
@@ -81,22 +74,6 @@ protected:
 	/** Time between the player's death and the level restarting, in seconds. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Game", meta = (ClampMin = "0", Units = "s"))
 	float RestartDelay = 3.f;
-
-	/** Whether to generate the arena at the start of play. Turn it off when using a hand-made level. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Arena")
-	bool bBuildArena = true;
-
-	/** Half the side of the square arena, in cm. 4000 gives an 80 x 80 m floor centred on the world origin. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Arena")
-	float ArenaHalfSize = 4000.f;
-
-	/** Height of the arena walls, in cm. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Arena")
-	float ArenaWallHeight = 400.f;
-
-	/** World height of the walkable floor surface, in cm. Slightly above 0 so it sits on top of any ground the base map has at zero height. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Arena")
-	float ArenaFloorZ = 5.f;
 
 private:
 	/** The generator running this level's horde. UPROPERTY keeps the reference valid for the garbage collector. */

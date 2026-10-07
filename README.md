@@ -2,7 +2,7 @@
 
 A horde shooter base for Unreal Engine 5.6, written entirely in C++. Waves of enemies chase you around an arena and you take them down with a weapon that fires physics-driven projectiles.
 
-The project contains no art assets. The arena, the enemies, the weapon, the HUD and the key bindings are all created from code using the engine's basic shapes, so it runs as soon as it compiles. Its only assets are two Blueprints, for the player and the enemy, which expose their values for editing in the editor.
+The project contains no art assets of its own: everything is built from the engine's basic shapes. Its assets are an arena level, two Blueprints for the player and the enemy, a horde config and two materials, all of which can be edited in the editor.
 
 ## Features
 
@@ -12,7 +12,7 @@ The project contains no art assets. The arena, the enemies, the weapon, the HUD 
 - **Data-driven waves.** A horde generator spawns waves in a ring around the player. The waves are described in a data asset, and each level can have its own.
 - **Health and game over.** The player has 100 health; on death the level restarts after a short delay.
 - **Canvas HUD.** Crosshair, health, wave number, enemies alive and kill count.
-- **Generated arena.** An 80 x 80 m floor with four walls, built at the start of play.
+- **Arena level.** `L_HKArena`, an 80 x 80 m floor with four walls, lighting, a player start and a horde generator.
 
 ## Requirements
 
@@ -106,16 +106,32 @@ Waves are configured in a data asset, not in code. See [Horde generator](#horde-
 | `EndlessEnemiesAddedPerWave` | 4 | Enemies added on each repetition in endless mode |
 | `SpawnRadiusMin` / `SpawnRadiusMax` | 1500 / 2500 | Ring around the player where enemies spawn |
 
-### Game and arena (`AHKGameMode`)
+### Game (`AHKGameMode`)
 
 | Property | Default | Meaning |
 | --- | --- | --- |
 | `DefaultHordeConfig` | `DA_HKHorde_Default` | Horde used in levels without their own horde generator |
 | `RestartDelay` | 3 | Time between the player's death and the restart |
-| `bBuildArena` | true | Whether to generate the arena |
-| `ArenaHalfSize` | 4000 | Half the side of the square arena |
-| `ArenaWallHeight` | 400 | Height of the walls |
-| `ArenaFloorZ` | 5 | Height of the floor surface |
+
+The arena's size and layout are not properties: they are the actors placed in the level. See [Level](#level).
+
+## Level
+
+The game is played in `Content/Maps/L_HKArena`, a regular level asset. It is the map the editor opens and the one the game loads, as set in `Config/DefaultEngine.ini`. It contains:
+
+| Actor | Purpose |
+| --- | --- |
+| `Arena_Floor` | 80 x 80 m floor, with its top surface at height 0 |
+| `Arena_Wall_XPos`, `XNeg`, `YPos`, `YNeg` | Four walls, 4 m high |
+| `HordeGenerator` | The level's horde generator, with `DA_HKHorde_Default` and a spawn area kept 2 m inside the walls |
+| `PlayerStart` | Where the player appears |
+| `DirectionalLight`, `SkyLight`, `SkyAtmosphere`, `ExponentialHeightFog`, `VolumetricCloud`, `SM_SkySphere` | Sky and lighting, taken from the engine's default level template |
+
+Nothing in the level is created by code. To change the arena, open the level in the editor and move, scale, add or delete actors. The floor and walls are engine cubes using the materials `MI_HKArenaFloor` and `MI_HKArenaWall` from `Content/Materials`.
+
+To add another level, create it in the editor, give it a floor, a `PlayerStart` and an **HK Horde Generator** with that level's horde config, and open it or set it as the default map.
+
+`Tools/create_arena_level.py` generated `L_HKArena` and its materials. It does nothing if the level already exists, so it never overwrites edits; it is only useful to recreate the level after deleting it.
 
 ## Blueprints
 
@@ -151,9 +167,15 @@ Content/
     BP_HKEnemy                Blueprint of the enemy (parent AHKEnemy)
   Data/Hordes/
     DA_HKHorde_Default        Default horde config (data asset of class UHKHordeConfig)
+  Maps/
+    L_HKArena                 The arena level
+  Materials/
+    MI_HKArenaFloor           Material of the arena floor
+    MI_HKArenaWall            Material of the arena walls
 Tools/
   create_blueprints.py        Script that generates the Blueprints from the C++ classes
   create_horde_configs.py     Script that generates the horde config data assets
+  create_arena_level.py       Script that generates the arena level and its materials
 Source/
   HordeKiller.Target.cs       Build target for the standalone game
   HordeKillerEditor.Target.cs Build target for the editor
@@ -167,7 +189,7 @@ Source/
     Weapons/
       HKProjectile.*          Physics projectile
     Game/
-      HKGameMode.*            Arena generation, waves, counters, restart
+      HKGameMode.*            Player and HUD classes, game over, restart
     Hordes/
       HKHordeGenerator.*      Actor that spawns the waves and tracks their progress
       HKHordeConfig.*         Data asset class that describes a horde's waves
@@ -212,7 +234,7 @@ Waves
 
 Waves play in order. When the list ends, `bEndless` decides what happens: if it is on, the last wave repeats forever with `EndlessEnemiesAddedPerWave` more enemies each time; if it is off, the horde is complete and the HUD shows "ALL WAVES CLEARED".
 
-The default asset, `Content/Data/Hordes/DA_HKHorde_Default`, has a single wave of 6 enemies in endless mode adding 4 per wave, which gives 6, 10, 14, 18 and so on.
+The default asset is `Content/Data/Hordes/DA_HKHorde_Default`. As generated by the script it has a single wave of 6 enemies in endless mode adding 4 per wave, which gives 6, 10, 14, 18 and so on; open it in the editor to see or change its current values.
 
 ### A different horde for each level
 
@@ -221,7 +243,7 @@ The default asset, `Content/Data/Hordes/DA_HKHorde_Default`, has a single wave o
 3. Open the level, drag an **HK Horde Generator** actor into it and place it on the floor at the centre of the play area.
 4. In the generator's Details panel, set **Config** to the new asset. Set **Spawn Area Half Size** to keep spawns inside the play area; 0 means no limit.
 
-A level that has a generator uses that generator and its config. A level without one gets a generator spawned by the game mode, using the game mode's `DefaultHordeConfig`.
+A level that has a generator uses that generator and its config; `L_HKArena` has one. A level without one gets a generator spawned by the game mode at the world origin, using the game mode's `DefaultHordeConfig` and no spawn area limit.
 
 ### Generator properties
 
@@ -279,7 +301,7 @@ int32 Total                = UHKActorManager::GetActorCount();
 
 Things to know:
 
-- **It only holds actors that subscribed.** Those are the project's own classes: the player and the enemies (through their shared base class `AHKHuman`), the projectiles, the game mode and the HUD. Engine actors with no code of ours, such as lights, the player controller or the arena blocks, are not in the list.
+- **It only holds actors that subscribed.** Those are the project's own classes: the player and the enemies (through their shared base class `AHKHuman`), the projectiles, the game mode and the HUD. Engine actors with no code of ours, such as lights, the player controller or the arena's floor and walls, are not in the list.
 - **A new actor class must subscribe too.** Add the two calls shown above to its `BeginPlay` and `EndPlay`, unless it inherits from a class that already does. An actor that does not register is invisible to the manager.
 - **It lives as long as the level.** It is a world subsystem, created with the game world and destroyed with it, so the list starts empty after a level load or restart.
 - **The static functions refer to the game that is running.** Outside a running game, such as in the editor before pressing Play, they return empty results.
@@ -292,7 +314,8 @@ The functions are C++ only for now; they are not exposed to Blueprint graphs.
 - **Projectiles** are static mesh spheres with physics simulation, hit events and continuous collision detection enabled. Firing applies a single velocity-change impulse along the camera's aim direction; after that the physics engine moves them. On hitting an enemy at speed they apply damage and knockback and are destroyed.
 - **Enemies** are characters possessed by an AI controller. Each frame they add movement input towards the player and attack when within range.
 - **The horde generator** spawns each wave described in its config asset, counts living enemies and starts the next wave when the count reaches zero.
-- **The game mode** builds the arena, makes sure the level has a horde generator and restarts the level when the player dies.
+- **The level** provides the arena, the lighting, the player start and the horde generator.
+- **The game mode** makes sure the level has a horde generator and restarts the level when the player dies.
 - **Input** uses Enhanced Input. The actions and the mapping context are created at runtime unless assets are assigned in a child Blueprint of the character.
 
 The source files are commented in detail and are the best reference for the specifics.
@@ -301,7 +324,6 @@ The source files are commented in detail and are the best reference for the spec
 
 - Enemies do not use navigation. They walk in a straight line towards the player and will get stuck on obstacles if any are added.
 - All visuals are placeholder shapes; there are no models, animations, effects or sounds.
-- The project has no map of its own. It uses the engine's default template map and builds the arena on top of it.
 - There is no menu, pause screen or score saving.
 - Single-player only.
 

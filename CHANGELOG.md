@@ -11,8 +11,11 @@ All notable changes to this project are listed here. The format follows [Keep a 
 - Blueprints `BP_HKCharacter` and `BP_HKEnemy`, derived from the C++ player and enemy classes, and the script that generates them (`Tools/create_blueprints.py`). The game mode uses them when present and falls back to the C++ classes otherwise.
 - `UHKActorManager`, a world subsystem that keeps a reference to the actors in the match and exposes them through static functions. Actors subscribe themselves in `BeginPlay` and unsubscribe in `EndPlay`.
 - `AHKHordeGenerator`, an actor that holds all wave functionality, and `UHKHordeConfig`, a data asset that describes a horde's waves. Each level can have its own config. The default asset, `DA_HKHorde_Default`, reproduces the previous waves (6, 10, 14...), and `Tools/create_horde_configs.py` generates it.
+- `L_HKArena`, a level asset with the arena, lighting, player start and horde generator, set as the default map, plus its two materials and the script that generates them (`Tools/create_arena_level.py`).
 
 ### Changed
+
+- The arena is no longer built by code. `AHKGameMode` lost its arena generation and arena properties; the floor and walls are actors in `L_HKArena`.
 
 - Wave logic and wave settings moved out of `AHKGameMode` into the horde generator and its config asset. The game mode keeps the arena and the restart, and spawns a generator in levels that do not have one.
 
