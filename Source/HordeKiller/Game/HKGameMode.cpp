@@ -11,22 +11,43 @@
 #include "Characters/HKEnemy.h"
 #include "UI/HKHUD.h"
 #include "TimerManager.h"
+#include "UObject/ConstructorHelpers.h"
 
 // Log category for gameplay events (waves, deaths). Filter the Output Log by "LogHordeKiller" to see them.
 DEFINE_LOG_CATEGORY_STATIC(LogHordeKiller, Log, All);
 
 AHKGameMode::AHKGameMode()
 {
-	// These make the game mode self-sufficient: the player spawns as the C++ character with the C++ HUD
-	// without any Blueprint or project setting beyond selecting this game mode.
+	// Start from the C++ classes. These make the game mode self-sufficient: the game runs with no
+	// Blueprint or project setting beyond selecting this game mode.
 	DefaultPawnClass = AHKCharacter::StaticClass();
 	HUDClass = AHKHUD::StaticClass();
 	EnemyClass = AHKEnemy::StaticClass();
+
+	// Prefer the Blueprint versions of the player and the enemy when they exist, so that values and
+	// meshes edited in the editor are the ones used in game. FClassFinder takes the asset path without
+	// the "_C" suffix of the generated class. If an asset is missing (for example in a checkout without
+	// Git LFS files) the lookup fails, logs a warning and the C++ class set above stays in place.
+	static ConstructorHelpers::FClassFinder<AHKCharacter> PlayerBlueprint(TEXT("/Game/Blueprints/Characters/BP_HKCharacter"));
+	if (PlayerBlueprint.Succeeded())
+	{
+		DefaultPawnClass = PlayerBlueprint.Class;
+	}
+
+	static ConstructorHelpers::FClassFinder<AHKEnemy> EnemyBlueprint(TEXT("/Game/Blueprints/Characters/BP_HKEnemy"));
+	if (EnemyBlueprint.Succeeded())
+	{
+		EnemyClass = EnemyBlueprint.Class;
+	}
 }
 
 void AHKGameMode::BeginPlay()
 {
 	Super::BeginPlay();
+
+	// Records which classes are in use, which shows at a glance whether the Blueprints were picked up.
+	UE_LOG(LogHordeKiller, Log, TEXT("Player class: %s, enemy class: %s"),
+		*GetNameSafe(DefaultPawnClass), *GetNameSafe(EnemyClass));
 
 	if (bBuildArena)
 	{

@@ -15,7 +15,9 @@ class AHKEnemy;
  * around the player. A new, larger wave starts a few seconds after the last enemy of the current one
  * dies. It also keeps the counters shown on the HUD and restarts the level when the player dies.
  *
- * It selects the player character and HUD classes too, so no Blueprint game mode is required.
+ * It selects the player character, enemy and HUD classes too, so no Blueprint game mode is required.
+ * For the player and the enemy it uses the Blueprints BP_HKCharacter and BP_HKEnemy when they exist,
+ * and falls back to the C++ classes otherwise.
  */
 UCLASS()
 class HORDEKILLER_API AHKGameMode : public AGameModeBase
@@ -23,7 +25,7 @@ class HORDEKILLER_API AHKGameMode : public AGameModeBase
 	GENERATED_BODY()
 
 public:
-	/** Selects the default pawn, HUD and enemy classes. */
+	/** Selects the default pawn, HUD and enemy classes, preferring the player and enemy Blueprints if present. */
 	AHKGameMode();
 
 	/** Called by an enemy when it dies. Updates the counters and schedules the next wave if it was the last one. */
@@ -66,7 +68,7 @@ protected:
 	/** Reloads the current level, which resets everything to its initial state. */
 	void RestartLevel();
 
-	/** Enemy class spawned by the waves. Replace it with a child Blueprint to change the enemy's look or values. */
+	/** Enemy class spawned by the waves. Defaults to the BP_HKEnemy Blueprint, or to the C++ enemy if that asset is missing. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Waves")
 	TSubclassOf<AHKEnemy> EnemyClass;
 

@@ -2,7 +2,7 @@
 
 A horde shooter base for Unreal Engine 5.6, written entirely in C++. Waves of enemies chase you around an arena and you take them down with a weapon that fires physics-driven projectiles.
 
-The project contains no art or Blueprint assets. The arena, the enemies, the weapon, the HUD and the key bindings are all created from code using the engine's basic shapes, so it runs as soon as it compiles.
+The project contains no art assets. The arena, the enemies, the weapon, the HUD and the key bindings are all created from code using the engine's basic shapes, so it runs as soon as it compiles. Its only assets are two Blueprints, for the player and the enemy, which expose their values for editing in the editor.
 
 ## Features
 
@@ -63,7 +63,7 @@ Adjust the engine path in the commands above if Unreal Engine is installed somew
 
 ## Tuning
 
-Every gameplay value is an editable property. Change the defaults in the headers, or create a child Blueprint of the class and edit them in the Details panel. Distances are in centimetres, speeds in centimetres per second and times in seconds.
+Every gameplay value is an editable property. For the player and the enemy, edit them in the Class Defaults of `BP_HKCharacter` and `BP_HKEnemy` (see [Blueprints](#blueprints)); a value set there overrides the C++ default. For the other classes, change the defaults in the headers. Distances are in centimetres, speeds in centimetres per second and times in seconds.
 
 ### Weapon and player (`AHKCharacter`)
 
@@ -108,12 +108,40 @@ Every gameplay value is an editable property. Change the defaults in the headers
 | `ArenaWallHeight` | 400 | Height of the walls |
 | `ArenaFloorZ` | 5 | Height of the floor surface |
 
+## Blueprints
+
+The player and the enemy each have a Blueprint that derives from their C++ class:
+
+| Blueprint | Parent class | Location |
+| --- | --- | --- |
+| `BP_HKCharacter` | `AHKCharacter` | `Content/Blueprints/Characters` |
+| `BP_HKEnemy` | `AHKEnemy` | `Content/Blueprints/Characters` |
+
+They contain no logic of their own. They exist so that values and components can be changed in the editor without recompiling: open one, select **Class Defaults** and edit the properties listed under [Tuning](#tuning), or select a component to swap its mesh or material.
+
+The game mode uses these Blueprints automatically. If one is missing, it falls back to the C++ class, so the game still runs. The Output Log shows which classes are in use on the line starting with `LogHordeKiller: Player class`.
+
+The Blueprints were generated with `Tools/create_blueprints.py`. To recreate a Blueprint that has been deleted, build the project and run:
+
+```
+"C:\Program Files\Epic Games\UE_5.6\Engine\Binaries\Win64\UnrealEditor-Cmd.exe" "%CD%\HordeKiller.uproject" -run=pythonscript -script="%CD%\Tools\create_blueprints.py"
+```
+
+The script skips Blueprints that already exist, so it never overwrites changes made in the editor.
+
+Blueprint files (`.uasset`) are stored with Git LFS. Run `git lfs install --local` after cloning, otherwise they are downloaded as small pointer files and the game falls back to the C++ classes.
+
 ## Project structure
 
 ```
 HordeKiller.uproject          Project descriptor (engine version, modules, plugins)
 Config/                       Engine, game and input settings
-Content/                      Empty; the project has no assets yet
+Content/
+  Blueprints/Characters/
+    BP_HKCharacter            Blueprint of the player (parent AHKCharacter)
+    BP_HKEnemy                Blueprint of the enemy (parent AHKEnemy)
+Tools/
+  create_blueprints.py        Script that generates the Blueprints from the C++ classes
 Source/
   HordeKiller.Target.cs       Build target for the standalone game
   HordeKillerEditor.Target.cs Build target for the editor
