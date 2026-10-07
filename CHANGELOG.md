@@ -14,6 +14,7 @@ All notable changes to this project are listed here. The format follows [Keep a 
 - `Test_HKArenaMap` (in `Content/Maps/Test`), a test level asset with the arena, lighting, player start and horde generator, set as the default map, plus its two materials and the script that generates them (`Tools/create_arena_level.py`).
 - Humanoid models for the player (Quinn) and the enemies (Manny), using Epic's mannequins and their locomotion animations. The assets are copied from the engine by `Tools/install_mannequins.py` and are not stored in the repository; without them the characters fall back to their placeholder shapes.
 - `UHKAnimInstanceHuman`, a C++ base animation instance for the player and the enemies, and `ABP_HKHuman`, the animation Blueprint that derives from it. The Blueprint is generated locally by `Tools/create_anim_blueprint.py` from the engine's `ABP_Unarmed` and is not stored in the repository.
+- `Setup.bat`, a one-step setup to run after cloning: it finds the engine, downloads the Git LFS files, generates the solution, builds the editor target and installs the character models.
 
 ### Changed
 

@@ -32,7 +32,33 @@ The project contains no art assets of its own. The arena, the weapon and the pro
    ```
    git clone https://github.com/alvarocabrero/HordeKiller.git
    cd HordeKiller
+   ```
+
+2. Run `Setup.bat`, by double-clicking it or from a terminal. Make sure the Unreal editor is closed.
+
+3. Open `HordeKiller.uproject` and press **Play**, or open `HordeKiller.sln` to work on the code.
+
+`Setup.bat` does everything needed to work with the project, and can be run again at any time; each step skips what is already done:
+
+| Step | What it does |
+| --- | --- |
+| 1 | Finds the Unreal Engine 5.6 installation |
+| 2 | Downloads the Git LFS files (Blueprints, levels, data assets) |
+| 3 | Generates the Visual Studio solution |
+| 4 | Builds the editor target (`HordeKillerEditor`, Win64, Development) |
+| 5 | Copies Epic's mannequins from the engine and generates the animation Blueprint, which are not stored in the repository |
+
+It finds the engine through the Epic Games Launcher's list of installed engines. If your engine is somewhere it cannot find, pass the folder: `Setup.bat "D:\Engines\UE_5.6"`, or set the `UE_ROOT` environment variable.
+
+### Manual setup
+
+The same steps by hand, in case the script cannot be used. Adjust the engine path if Unreal Engine is installed somewhere else.
+
+1. Download the Git LFS files:
+
+   ```
    git lfs install --local
+   git lfs pull
    ```
 
 2. Generate the Visual Studio solution. Either right-click `HordeKiller.uproject` and choose **Generate Visual Studio project files**, or run:
@@ -64,8 +90,6 @@ The project contains no art assets of its own. The arena, the weapon and the pro
    Without this step the game still runs, with placeholder shapes instead of the models. See [Character models](#character-models).
 
 5. Open the editor and press **Play**.
-
-Adjust the engine path in the commands above if Unreal Engine is installed somewhere else.
 
 ## Controls
 
@@ -157,7 +181,7 @@ The player and the enemies are humanoids: Epic's mannequins, **Quinn** for the p
 
 ### Where the models come from
 
-The mannequins are Epic Games content, covered by the Unreal Engine EULA and not by this project's license. They are **not stored in this repository**: `Content/Characters` is listed in `.gitignore`. They ship with every engine installation, and `Tools/install_mannequins.py` copies them from there into the project (about 125 MB). Run it once after cloning, as shown in [Getting started](#getting-started). It never overwrites files that are already there.
+The mannequins are Epic Games content, covered by the Unreal Engine EULA and not by this project's license. They are **not stored in this repository**: `Content/Characters` is listed in `.gitignore`. They ship with every engine installation, and `Tools/install_mannequins.py` copies them from there into the project (about 125 MB). `Setup.bat` runs it for you, as described in [Getting started](#getting-started). It never overwrites files that are already there.
 
 ### Animation
 
@@ -219,6 +243,7 @@ Blueprint files (`.uasset`) are stored with Git LFS. Run `git lfs install --loca
 ## Project structure
 
 ```
+Setup.bat                     One-step setup after cloning
 HordeKiller.uproject          Project descriptor (engine version, modules, plugins)
 Config/                       Engine, game and input settings
 Content/
