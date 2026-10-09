@@ -13,7 +13,7 @@ public class HordeKillerEditorTarget : TargetRules
 		Type = TargetType.Editor;
 
 		// Same settings as the game target; see HordeKiller.Target.cs.
-		DefaultBuildSettings = BuildSettingsVersion.V5;
+		DefaultBuildSettings = BuildSettingsVersion.V7;
 		IncludeOrderVersion = EngineIncludeOrderVersion.Latest;
 
 		// Game modules to compile into this target.

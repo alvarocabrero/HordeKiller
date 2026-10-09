@@ -13,7 +13,7 @@ rem      the repository. Also recreates the animation Blueprint if it is missing
 rem
 rem It is safe to run again: every step skips what is already done.
 rem
-rem Usage:  Setup.bat ["C:\Path\To\UE_5.6"]
+rem Usage:  Setup.bat ["C:\Path\To\UE_5.8"]
 rem   The engine folder is optional. Without it, the UE_ROOT environment variable is used if set, then
 rem   the Epic Games Launcher's record of installed engines, then the default install folder.
 rem   Set HK_NO_PAUSE=1 to skip the final "press any key" (for scripts).
@@ -21,7 +21,7 @@ rem   Set HK_NO_PAUSE=1 to skip the final "press any key" (for scripts).
 setlocal EnableExtensions
 cd /d "%~dp0"
 
-set "ENGINE_VERSION=5.6"
+set "ENGINE_VERSION=5.8"
 set "PROJECT=%~dp0HordeKiller.uproject"
 set "TARGET=HordeKillerEditor"
 

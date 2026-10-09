@@ -1,6 +1,6 @@
 {
 	"FileVersion": 3,
-	"EngineAssociation": "5.6",
+	"EngineAssociation": "5.8",
 	"Category": "",
 	"Description": "",
 	"Modules": [
@@ -10,6 +10,8 @@
 		{ "Name": "EnhancedInput", "Enabled": true },
 		{ "Name": "ModelingToolsEditorMode", "Enabled": true, "TargetAllowList": [ "Editor" ] },
 		{ "Name": "AndroidFileServer", "Enabled": false },
-		{ "Name": "PhysicsControl", "Enabled": true }
+		{ "Name": "PhysicsControl", "Enabled": true },
+		{ "Name": "ModelContextProtocol", "Enabled": true, "TargetAllowList": [ "Editor" ] },
+		{ "Name": "AllToolsets", "Enabled": true, "TargetAllowList": [ "Editor" ] }
 	]
 }

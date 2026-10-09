@@ -11,7 +11,7 @@ Follow the steps in the [README](README.md#getting-started) to clone, generate p
 3. Before opening a pull request, make sure the editor target builds:
 
    ```
-   "C:\Program Files\Epic Games\UE_5.6\Engine\Build\BatchFiles\Build.bat" HordeKillerEditor Win64 Development -Project="%CD%\HordeKiller.uproject" -WaitMutex
+   "C:\Program Files\Epic Games\UE_5.8\Engine\Build\BatchFiles\Build.bat" HordeKillerEditor Win64 Development -Project="%CD%\HordeKiller.uproject" -WaitMutex
    ```
 
    Then play the game in the editor and check that the change works and that waves still start, enemies still die in two hits and the player can still die and restart.

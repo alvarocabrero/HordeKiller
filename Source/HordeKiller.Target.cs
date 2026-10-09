@@ -13,7 +13,7 @@ public class HordeKillerTarget : TargetRules
 
 		// Use the build defaults introduced with the current engine generation, and the newest include
 		// order. Both avoid deprecation warnings and keep the project aligned with new engine projects.
-		DefaultBuildSettings = BuildSettingsVersion.V5;
+		DefaultBuildSettings = BuildSettingsVersion.V7;
 		IncludeOrderVersion = EngineIncludeOrderVersion.Latest;
 
 		// Game modules to compile into this target.

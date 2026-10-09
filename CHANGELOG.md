@@ -18,9 +18,11 @@ All notable changes to this project are listed here. The format follows [Keep a 
 - Ragdoll deaths: a killed enemy falls as a physics ragdoll and its corpse is removed after `CorpseLifetime` (10 seconds).
 - `UPhysicsControlComponent` on `AHKEnemy`, with the engine's PhysicsControl plugin enabled, for future partial ragdolls and hit reactions.
 - `UHKEnemyPool`, a pool owned by the horde generator that creates enemies in advance and reuses them. It is sized, per enemy class, to the largest total of one wave plus the next.
+- Editor MCP server: the `ModelContextProtocol` and `AllToolsets` engine plugins are enabled for the editor, so an AI assistant can drive the running editor.
 
 ### Changed
 
+- Migrated from Unreal Engine 5.6 to 5.8. The build targets use `BuildSettingsVersion.V7`. The 5.6 version of the project is kept on the `ue-5.6` branch.
 - The player class is now `AHKPlayer` (it was `AHKCharacter`), in `HKPlayer.h` / `.cpp`, and its Blueprint is `BP_HKPlayer`. A class redirect in `Config/DefaultEngine.ini` keeps assets saved with the old name loading.
 
 - Enemies are no longer spawned per wave or destroyed on death; they are taken from and returned to the pool. Projectiles ignore dead enemies for damage.

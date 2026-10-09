@@ -24,7 +24,7 @@ public class HordeKiller : ModuleRules
 		//   Engine            - actors, components, game framework, physics.
 		//   InputCore         - key definitions (EKeys).
 		//   EnhancedInput     - input actions, mapping contexts and modifiers.
-		//   PhysicsControl    - UPhysicsControlComponent, from the engine plugin of the same name (experimental).
+		//   PhysicsControl    - UPhysicsControlComponent, from the engine plugin of the same name.
 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "PhysicsControl" });
 	}
 }

@@ -1,6 +1,6 @@
 # HordeKiller
 
-A horde shooter base for Unreal Engine 5.6, written entirely in C++. Waves of enemies chase you around an arena and you take them down with a weapon that fires physics-driven projectiles.
+A horde shooter base for Unreal Engine 5.8, written entirely in C++. Waves of enemies chase you around an arena and you take them down with a weapon that fires physics-driven projectiles.
 
 The project contains no art assets of its own. The arena, the weapon and the projectiles are built from the engine's basic shapes, and the characters use Epic's mannequins, which are copied from the engine installation instead of being stored in the repository. Its own assets are an arena level, two Blueprints for the player and the enemy, a horde config and two materials, all of which can be edited in the editor.
 
@@ -20,7 +20,7 @@ The project contains no art assets of its own. The arena, the weapon and the pro
 ## Requirements
 
 - Windows 10 or 11, 64-bit.
-- Unreal Engine 5.6, installed through the Epic Games Launcher.
+- Unreal Engine 5.8, installed through the Epic Games Launcher.
 - Visual Studio 2022 with these workloads:
   - Game development with C++
   - Desktop development with C++
@@ -44,13 +44,13 @@ The project contains no art assets of its own. The arena, the weapon and the pro
 
 | Step | What it does |
 | --- | --- |
-| 1 | Finds the Unreal Engine 5.6 installation |
+| 1 | Finds the Unreal Engine 5.8 installation |
 | 2 | Downloads the Git LFS files (Blueprints, levels, data assets) |
 | 3 | Generates the Visual Studio solution |
 | 4 | Builds the editor target (`HordeKillerEditor`, Win64, Development) |
 | 5 | Copies Epic's mannequins from the engine, which are not stored in the repository |
 
-It finds the engine through the Epic Games Launcher's list of installed engines. If your engine is somewhere it cannot find, pass the folder: `Setup.bat "D:\Engines\UE_5.6"`, or set the `UE_ROOT` environment variable.
+It finds the engine through the Epic Games Launcher's list of installed engines. If your engine is somewhere it cannot find, pass the folder: `Setup.bat "D:\Engines\UE_5.8"`, or set the `UE_ROOT` environment variable.
 
 ### Manual setup
 
@@ -66,7 +66,7 @@ The same steps by hand, in case the script cannot be used. Adjust the engine pat
 2. Generate the Visual Studio solution. Either right-click `HordeKiller.uproject` and choose **Generate Visual Studio project files**, or run:
 
    ```
-   "C:\Program Files\Epic Games\UE_5.6\Engine\Binaries\DotNET\UnrealBuildTool\UnrealBuildTool.exe" -projectfiles -project="%CD%\HordeKiller.uproject" -game -rocket -progress
+   "C:\Program Files\Epic Games\UE_5.8\Engine\Binaries\DotNET\UnrealBuildTool\UnrealBuildTool.exe" -projectfiles -project="%CD%\HordeKiller.uproject" -game -rocket -progress
    ```
 
 3. Open `HordeKiller.sln`, select the **Development Editor** configuration and the **Win64** platform, set `HordeKiller` as the start-up project and press **F5**. This builds the game module and opens the editor.
@@ -74,19 +74,19 @@ The same steps by hand, in case the script cannot be used. Adjust the engine pat
    To build from the command line instead:
 
    ```
-   "C:\Program Files\Epic Games\UE_5.6\Engine\Build\BatchFiles\Build.bat" HordeKillerEditor Win64 Development -Project="%CD%\HordeKiller.uproject" -WaitMutex
+   "C:\Program Files\Epic Games\UE_5.8\Engine\Build\BatchFiles\Build.bat" HordeKillerEditor Win64 Development -Project="%CD%\HordeKiller.uproject" -WaitMutex
    ```
 
 4. Optional, but recommended: copy the humanoid character models from your engine installation into the project. Close the editor first, then run:
 
    ```
-   "C:\Program Files\Epic Games\UE_5.6\Engine\Binaries\Win64\UnrealEditor-Cmd.exe" "%CD%\HordeKiller.uproject" -run=pythonscript -script="%CD%\Tools\install_mannequins.py"
+   "C:\Program Files\Epic Games\UE_5.8\Engine\Binaries\Win64\UnrealEditor-Cmd.exe" "%CD%\HordeKiller.uproject" -run=pythonscript -script="%CD%\Tools\install_mannequins.py"
    ```
 
    Then generate the animation Blueprint that drives them:
 
    ```
-   "C:\Program Files\Epic Games\UE_5.6\Engine\Binaries\Win64\UnrealEditor-Cmd.exe" "%CD%\HordeKiller.uproject" -run=pythonscript -script="%CD%\Tools\create_anim_blueprint.py"
+   "C:\Program Files\Epic Games\UE_5.8\Engine\Binaries\Win64\UnrealEditor-Cmd.exe" "%CD%\HordeKiller.uproject" -run=pythonscript -script="%CD%\Tools\create_anim_blueprint.py"
    ```
 
    Without this step the game still runs, with placeholder shapes instead of the models. See [Character models](#character-models).
@@ -239,7 +239,7 @@ The game mode uses these Blueprints automatically. If one is missing, it falls b
 The Blueprints were generated with `Tools/create_blueprints.py`. To recreate a Blueprint that has been deleted, build the project and run:
 
 ```
-"C:\Program Files\Epic Games\UE_5.6\Engine\Binaries\Win64\UnrealEditor-Cmd.exe" "%CD%\HordeKiller.uproject" -run=pythonscript -script="%CD%\Tools\create_blueprints.py"
+"C:\Program Files\Epic Games\UE_5.8\Engine\Binaries\Win64\UnrealEditor-Cmd.exe" "%CD%\HordeKiller.uproject" -run=pythonscript -script="%CD%\Tools\create_blueprints.py"
 ```
 
 The script skips Blueprints that already exist, so it never overwrites changes made in the editor.
@@ -310,6 +310,24 @@ ACharacter (engine)
 
 `AHKHuman` owns the damage flow. Subclasses do not override `TakeDamage`; they override `HandleDamaged` (a hit they survive) and `HandleDeath` (health reached zero) to add their own reaction.
 
+## Editor MCP server
+
+The project enables two engine plugins, **ModelContextProtocol** and **AllToolsets**, for the editor only. Together they let an AI coding assistant such as Claude Code drive the running Unreal editor through the Model Context Protocol (MCP): inspect and edit actors, Blueprints, materials and other assets, and trigger Live Coding. Both plugins are experimental in Unreal Engine 5.8.
+
+The server is off unless you turn it on, and it only listens while the editor is open:
+
+- **Start it by hand:** run `ModelContextProtocol.StartServer` in the editor's console.
+- **Start it with the editor:** enable **Auto Start Server** under Editor Preferences > Model Context Protocol. This is a per-user setting and is not stored in the repository.
+
+It serves at `http://localhost:8000/mcp` by default. To use it from Claude Code, install Epic's plugin and register the server, from the project folder:
+
+```n/plugin marketplace add anthropics/claude-plugins-official
+/plugin install unreal-engine-skills-for-claude-code@claude-plugins-official
+claude mcp add --transport http unreal-mcp http://localhost:8000/mcp
+```
+
+Anything connected to the server can modify the project's assets, so keep it off when you are not using it and commit your work before letting an assistant make bulk changes.
+
 ## Horde generator
 
 Everything about waves is split in two:
@@ -368,7 +386,7 @@ When an enemy's health reaches zero it stops moving and attacking, its capsule s
 
 Without the character models installed there is no ragdoll: the placeholder enemy returns to the pool as soon as it dies.
 
-`AHKEnemy` also has a `UPhysicsControlComponent`, from the engine's PhysicsControl plugin, which is experimental in Unreal Engine 5.6. It is there for partial ragdolls and physical hit reactions, and has no controls set up yet; the death ragdoll does not use it.
+`AHKEnemy` also has a `UPhysicsControlComponent`, from the engine's PhysicsControl plugin. It is there for partial ragdolls and physical hit reactions, and has no controls set up yet; the death ragdoll does not use it.
 
 From code, the generator in use is available as `AHKGameMode::GetHordeGenerator()`, and exposes `StartHorde()`, `StopHorde()`, `GetCurrentWave()`, `GetEnemiesAlive()`, `GetKills()` and `IsHordeComplete()`. Its events are written to the Output Log under `LogHKHorde`.
 
