@@ -66,7 +66,7 @@ The same steps by hand, in case the script cannot be used. Adjust the engine pat
 2. Generate the Visual Studio solution. Either right-click `HordeKiller.uproject` and choose **Generate Visual Studio project files**, or run:
 
    ```
-   "C:\Program Files\Epic Games\UE_5.8\Engine\Binaries\DotNET\UnrealBuildTool\UnrealBuildTool.exe" -projectfiles -project="%CD%\HordeKiller.uproject" -game -rocket -progress
+   "C:\Program Files\Epic Games\UE_5.8\Engine\Build\BatchFiles\Build.bat" -projectfiles -project="%CD%\HordeKiller.uproject" -game -rocket -progress
    ```
 
 3. Open `HordeKiller.sln`, select the **Development Editor** configuration and the **Win64** platform, set `HordeKiller` as the start-up project and press **F5**. This builds the game module and opens the editor.

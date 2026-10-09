@@ -42,7 +42,6 @@ if not defined UE (
 if not defined UE set "UE=%ProgramFiles%\Epic Games\UE_%ENGINE_VERSION%"
 
 set "EDITOR_CMD=%UE%\Engine\Binaries\Win64\UnrealEditor-Cmd.exe"
-set "UBT=%UE%\Engine\Binaries\DotNET\UnrealBuildTool\UnrealBuildTool.exe"
 set "BUILD_BAT=%UE%\Engine\Build\BatchFiles\Build.bat"
 
 if not exist "%EDITOR_CMD%" (
@@ -79,7 +78,8 @@ rem ----------------------------------------------------------------------------
 echo.
 echo [3/5] Generating the Visual Studio solution...
 
-"%UBT%" -projectfiles -project="%PROJECT%" -game -rocket -progress
+rem Through Build.bat, which runs UnrealBuildTool with the .NET runtime bundled with the engine.
+call "%BUILD_BAT%" -projectfiles -project="%PROJECT%" -game -rocket -progress
 if errorlevel 1 (
     echo ERROR: Could not generate the project files. Check that Visual Studio 2022 is installed with
     echo        the "Game development with C++" workload.
