@@ -1,12 +1,16 @@
 // Copyright (c) 2026 Álvaro Cabrero Barros. Licensed under the MIT License. See LICENSE in the repository root.
 
 #include "Characters/HKEnemy.h"
+#include "Animation/AnimInstance.h"
+#include "Animation/AnimSequenceBase.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/StaticMesh.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Materials/MaterialInstanceDynamic.h"
+#include "Misc/PackageName.h"
 #include "Characters/HKPlayer.h"
 #include "Hordes/HKHordeGenerator.h"
 #include "Managers/HKActorManager.h"
@@ -50,6 +54,8 @@ AHKEnemy::AHKEnemy()
 
 	// Two projectile hits at the default damage of 1.
 	MaxHealth = 2.f;
+
+	AttackAnimation = FSoftObjectPath(TEXT("/Game/Characters/Animation/AS_HKEnemy_Attack.AS_HKEnemy_Attack"));
 }
 
 void AHKEnemy::SetHordeGenerator(AHKHordeGenerator* InGenerator)
@@ -68,6 +74,12 @@ void AHKEnemy::BeginPlay()
 	if (HasBodyModel())
 	{
 		BodyMesh->SetVisibility(false);
+
+		// Checked first because loading a missing asset logs a warning.
+		if (!AttackAnimation.IsNull() && FPackageName::DoesPackageExist(AttackAnimation.GetLongPackageName()))
+		{
+			LoadedAttackAnimation = AttackAnimation.LoadSynchronous();
+		}
 	}
 	else
 	{
@@ -161,7 +173,21 @@ void AHKEnemy::Tick(float DeltaSeconds)
 	if (Distance <= AttackRange && Now - LastAttackTime >= AttackCooldown)
 	{
 		LastAttackTime = Now;
+		PlayAttackAnimation();
 		UGameplayStatics::ApplyDamage(const_cast<AHKPlayer*>(Player), AttackDamage, GetController(), this, nullptr);
+	}
+}
+
+void AHKEnemy::PlayAttackAnimation()
+{
+	if (!LoadedAttackAnimation)
+	{
+		return;
+	}
+
+	if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
+	{
+		AnimInstance->PlaySlotAnimationAsDynamicMontage(LoadedAttackAnimation, TEXT("DefaultSlot"), 0.1f, 0.2f);
 	}
 }
 
@@ -193,6 +219,12 @@ void AHKEnemy::HandleDeath()
 	{
 		RemoveCorpse();
 		return;
+	}
+
+	// An attack still playing would resume when the enemy leaves the pool.
+	if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
+	{
+		AnimInstance->Montage_Stop(0.f);
 	}
 
 	// Push the ragdoll away from what killed it, with a little lift.

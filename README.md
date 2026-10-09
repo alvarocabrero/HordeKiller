@@ -133,6 +133,7 @@ Every gameplay value is an editable property. For the player and the enemy, edit
 | `AttackDamage` | 10 | Damage dealt to the player per attack |
 | `AttackRange` | 110 | Distance at which an attack lands |
 | `AttackCooldown` | 1 | Time between attacks |
+| `AttackAnimation` | `AS_HKEnemy_Attack` | Animation played on the body each time the enemy attacks; empty for none |
 | `HealthyColor` / `WoundedColor` | red / orange | Body colour before and after the first hit |
 | `CorpseLifetime` | 10 | Time the corpse stays after death before it is removed |
 | `DeathImpulse` | 500 | Speed given to the ragdoll at death, away from what killed the enemy |

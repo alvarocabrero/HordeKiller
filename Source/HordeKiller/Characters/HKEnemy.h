@@ -7,6 +7,7 @@
 #include "HKEnemy.generated.h"
 
 class AHKHordeGenerator;
+class UAnimSequenceBase;
 class UMaterialInstanceDynamic;
 class UPhysicsControlComponent;
 class UStaticMeshComponent;
@@ -92,6 +93,9 @@ protected:
 	/** Removes the corpse: returns the enemy to its generator's pool, or destroys it if it has none. */
 	void RemoveCorpse();
 
+	/** Plays AttackAnimation on the body model. Has no effect if there is no animation or no body model. */
+	void PlayAttackAnimation();
+
 	/** Applies the given colour to whichever body is showing: the humanoid model or the placeholder cylinder. */
 	void SetBodyColor(const FLinearColor& Color);
 
@@ -123,6 +127,14 @@ protected:
 	/** Minimum time between two attacks by this enemy, in seconds. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Enemy")
 	float AttackCooldown = 1.f;
+
+	/**
+	 * Animation played on the body model each time the enemy attacks. It is played in the "DefaultSlot"
+	 * slot of the animation Blueprint, over the whole body. A soft reference: the asset is only loaded
+	 * when play begins. Leave empty to attack without an animation.
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Enemy")
+	TSoftObjectPtr<UAnimSequenceBase> AttackAnimation;
 
 	/** Body colour while at full health. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Enemy")
@@ -160,4 +172,8 @@ private:
 	/** Per-instance material of the placeholder cylinder. UPROPERTY keeps it from being garbage collected. */
 	UPROPERTY()
 	TObjectPtr<UMaterialInstanceDynamic> BodyMaterial;
+
+	/** AttackAnimation once loaded, or null if it is empty or there is no body model. UPROPERTY keeps it from being garbage collected. */
+	UPROPERTY()
+	TObjectPtr<UAnimSequenceBase> LoadedAttackAnimation;
 };

@@ -19,6 +19,7 @@ All notable changes to this project are listed here. The format follows [Keep a 
 - `UPhysicsControlComponent` on `AHKEnemy`, with the engine's PhysicsControl plugin enabled, for future partial ragdolls and hit reactions.
 - `UHKEnemyPool`, a pool owned by the horde generator that creates enemies in advance and reuses them. It is sized, per enemy class, to the largest total of one wave plus the next.
 - Editor MCP server: the `ModelContextProtocol` and `AllToolsets` engine plugins are enabled for the editor, so an AI assistant can drive the running editor.
+- Enemy attack animation: `AS_HKEnemy_Attack`, a punch keyed for this project on the mannequin's Control Rig, plays on the enemy's body each time it attacks (`AttackAnimation` on `AHKEnemy`). `LS_HKEnemy_Attack` is the Level Sequence it was exported from.
 
 ### Changed
 
