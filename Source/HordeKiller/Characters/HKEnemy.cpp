@@ -55,7 +55,9 @@ AHKEnemy::AHKEnemy()
 	// Two projectile hits at the default damage of 1.
 	MaxHealth = 2.f;
 
-	AttackAnimation = FSoftObjectPath(TEXT("/Game/Characters/Animation/AS_HKEnemy_Attack.AS_HKEnemy_Attack"));
+	// Zombie locomotion instead of the mannequin's, and a zombie scratch as the attack.
+	BodyAnimClass = FSoftObjectPath(TEXT("/Game/Characters/Animation/ABP_HKZombie.ABP_HKZombie_C"));
+	AttackAnimation = FSoftObjectPath(TEXT("/Game/ThirdParty/Quaternius/Animations/Zombie_Scratch.Zombie_Scratch"));
 }
 
 void AHKEnemy::SetHordeGenerator(AHKHordeGenerator* InGenerator)
@@ -187,7 +189,9 @@ void AHKEnemy::PlayAttackAnimation()
 
 	if (UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance())
 	{
-		AnimInstance->PlaySlotAnimationAsDynamicMontage(LoadedAttackAnimation, TEXT("DefaultSlot"), 0.1f, 0.2f);
+		// Sped up when longer than the cooldown, so it ends before the next attack starts.
+		const float PlayRate = AttackCooldown > 0.f ? FMath::Max(1.f, LoadedAttackAnimation->GetPlayLength() / AttackCooldown) : 1.f;
+		AnimInstance->PlaySlotAnimationAsDynamicMontage(LoadedAttackAnimation, TEXT("DefaultSlot"), 0.1f, 0.2f, PlayRate);
 	}
 }
 

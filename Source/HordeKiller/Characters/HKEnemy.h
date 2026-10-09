@@ -130,8 +130,9 @@ protected:
 
 	/**
 	 * Animation played on the body model each time the enemy attacks. It is played in the "DefaultSlot"
-	 * slot of the animation Blueprint, over the whole body. A soft reference: the asset is only loaded
-	 * when play begins. Leave empty to attack without an animation.
+	 * slot of the animation Blueprint, over the whole body, and sped up if it is longer than
+	 * AttackCooldown. A soft reference: the asset is only loaded when play begins. Leave empty to attack
+	 * without an animation.
 	 */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Enemy")
 	TSoftObjectPtr<UAnimSequenceBase> AttackAnimation;

@@ -1,0 +1,7 @@
+The animations in this folder come from "Universal Animation Library 2" (Standard version) by Quaternius.
+https://quaternius.itch.io/universal-animation-library-2
+
+They were retargeted from the pack's skeleton to Epic's mannequin skeleton for this project.
+
+License: CC0 1.0 Universal (Public Domain Dedication)
+https://creativecommons.org/publicdomain/zero/1.0/

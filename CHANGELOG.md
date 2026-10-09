@@ -19,7 +19,8 @@ All notable changes to this project are listed here. The format follows [Keep a 
 - `UPhysicsControlComponent` on `AHKEnemy`, with the engine's PhysicsControl plugin enabled, for future partial ragdolls and hit reactions.
 - `UHKEnemyPool`, a pool owned by the horde generator that creates enemies in advance and reuses them. It is sized, per enemy class, to the largest total of one wave plus the next.
 - Editor MCP server: the `ModelContextProtocol` and `AllToolsets` engine plugins are enabled for the editor, so an AI assistant can drive the running editor.
-- Enemy attack animation: `AS_HKEnemy_Attack`, a punch keyed for this project on the mannequin's Control Rig, plays on the enemy's body each time it attacks (`AttackAnimation` on `AHKEnemy`). `LS_HKEnemy_Attack` is the Level Sequence it was exported from.
+- Enemy attack animation: `AHKEnemy` plays `AttackAnimation` on its body each time it attacks. `AS_HKEnemy_Attack`, a punch keyed for this project on the mannequin's Control Rig, is available for it; `LS_HKEnemy_Attack` is the Level Sequence it was exported from.
+- Zombie animations for the enemies, from Quaternius's Universal Animation Library 2 (CC0), retargeted to the mannequin skeleton and stored in `Content/ThirdParty/Quaternius`: an idle, a walk and a scratch. Enemies use them through `ABP_HKZombie`, a copy of `ABP_HKHuman` with the zombie idle and the `BS_HKZombie_Locomotion` blend space, and the scratch is their default `AttackAnimation`.
 
 ### Changed
 
