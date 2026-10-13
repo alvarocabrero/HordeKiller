@@ -6,6 +6,8 @@
 #include "GameFramework/Character.h"
 #include "HKHuman.generated.h"
 
+class UHKAnimLayerInstance;
+
 /**
  * Base class for every character in the game: the player and the enemies.
  *
@@ -56,7 +58,7 @@ public:
 	bool HasBodyModel() const { return bHasBodyModel; }
 
 protected:
-	/** Registers with the actor manager, fills health from MaxHealth and notes whether there is a body model. */
+	/** Registers with the actor manager, fills health from MaxHealth, notes whether there is a body model and links its animation layers. */
 	virtual void BeginPlay() override;
 
 	/**
@@ -105,9 +107,17 @@ private:
 	void PlaceBodyOnCapsule();
 
 protected:
-	/** Health the character starts with. Subclasses set their own default in their constructor. */
+	/** Health the character starts with. Each character's Blueprint sets its own. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Health")
 	float MaxHealth = 100.f;
+
+	/**
+	 * Animation layers linked onto the body's animation Blueprint when play begins. The animation
+	 * Blueprint on the Mesh component is shared by every humanoid; this is what makes the player and the
+	 * enemies animate differently. Empty in C++: assigned in each character's Blueprint.
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
+	TSubclassOf<UHKAnimLayerInstance> AnimLayerClass;
 
 private:
 	/** The actor that dealt the most recent damage. Weak, because projectiles destroy themselves on impact. */

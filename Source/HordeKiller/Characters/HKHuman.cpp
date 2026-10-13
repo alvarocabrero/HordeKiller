@@ -1,6 +1,7 @@
 // Copyright (c) 2026 Álvaro Cabrero Barros. Licensed under the MIT License. See LICENSE in the repository root.
 
 #include "Characters/HKHuman.h"
+#include "Animation/HKAnimLayerInstance.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine/SkeletalMesh.h"
@@ -18,6 +19,11 @@ void AHKHuman::BeginPlay()
 
 	// The model is assigned on the mesh component in the character's Blueprint; it may be missing.
 	bHasBodyModel = GetMesh()->GetSkeletalMeshAsset() != nullptr;
+
+	if (bHasBodyModel && AnimLayerClass)
+	{
+		GetMesh()->LinkAnimClassLayers(AnimLayerClass);
+	}
 }
 
 void AHKHuman::EndPlay(const EEndPlayReason::Type EndPlayReason)

@@ -25,6 +25,7 @@ All notable changes to this project are listed here. The format follows [Keep a 
 
 ### Changed
 
+- Groundwork for a single animation Blueprint shared by the player and the enemies: `UHKAnimLayerInstance`, a C++ base class for animation layers that gives them the main instance's state, and `AnimLayerClass` on `AHKHuman`, the layer Blueprint each character links onto its animation Blueprint when play begins.
 - New Blueprints `BP_HKProjectile`, `BP_HKGameMode`, `BP_HKHUD` and `BP_HKHordeGenerator`. The project's game mode is now `BP_HKGameMode`, which names the player and HUD Blueprints and the default horde config; `AHKGameMode` and `AHKProjectile` no longer set classes, assets or physics values in their constructors.
 - The constructors of `AHKHuman`, `AHKPlayer` and `AHKEnemy` only create components now. Everything a Blueprint can set (capsule size, movement, camera boom, weapon mesh, AI possession, health, projectile class) is set in `BP_HKPlayer` and `BP_HKEnemy`, on the engine's own fields. `CameraDistance`, `CameraOffset` and `MoveSpeed` are gone: the camera boom's arm length and offset and the movement component's walk speed replace them.
 - The offset that stands a character's model on its capsule is set on the Mesh component of `BP_HKPlayer` and `BP_HKEnemy` instead of in code, and the enemy's placeholder cylinder is gone: without the models installed, characters have no visible body.
