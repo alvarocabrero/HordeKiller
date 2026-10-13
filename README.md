@@ -114,6 +114,7 @@ Every gameplay value is an editable property. For the player and the enemy, the 
 | `MuzzleDistance` | 100 | Distance in front of the player where projectiles spawn |
 | `MuzzleHeight` | 50 | Height above the centre of the player from which projectiles are fired |
 | `AimRange` | 20000 | How far the crosshair's view line is checked for something to aim at |
+| `AimTraceChannel` | Visibility | Collision channel that view line is traced against |
 | `MaxHealth` | 100 | Starting health (property inherited from `AHKHuman`) |
 | `ProjectileClass` | `AHKProjectile` (set in `BP_HKPlayer`) | Projectile spawned on each shot |
 
@@ -139,6 +140,7 @@ Set on components of `BP_HKPlayer`:
 | `Damage` | 1 | Damage dealt to an enemy |
 | `MinDamageSpeed` | 600 | Speed below which a projectile no longer deals damage |
 | `KnockbackStrength` | 350 | Speed given to the enemy that is hit |
+| `KnockbackLift` | 0.3 | Upward part of the knockback, as a fraction of `KnockbackStrength` |
 
 ### Enemy (`AHKEnemy`)
 
@@ -148,10 +150,15 @@ Set on components of `BP_HKPlayer`:
 | `AttackDamage` | 10 | Damage dealt to the player per attack |
 | `AttackRange` | 110 | Distance at which an attack lands |
 | `AttackCooldown` | 1 | Time between attacks |
+| `StopRangeRatio` | 0.8 | How close the enemy gets before it stops, as a fraction of `AttackRange` |
+| `AttackSlotName` | `DefaultSlot` | Montage slot of the animation Blueprint the attack plays in |
+| `AttackBlendInTime` / `AttackBlendOutTime` | 0.1 / 0.2 | Blend in and out of the attack animation |
 | `AttackAnimation` | `Zombie_Scratch` (set in `BP_HKEnemy`) | Animation played on the body each time the enemy attacks, sped up to fit `AttackCooldown`; empty for none |
 | `HealthyColor` / `WoundedColor` | red / orange | Body colour before and after the first hit |
 | `CorpseLifetime` | 10 | Time the corpse stays after death before it is removed |
 | `DeathImpulse` | 500 | Speed given to the ragdoll at death, away from what killed the enemy |
+| `DeathImpulseLift` | 0.3 | Upward part of that push, as a fraction of `DeathImpulse` |
+| AI Controller Class | `BP_HKEnemyAIController` | Controller that runs the enemy's behaviour tree, `BT_HKEnemy` (in `Content/AI`). The tree is empty for now, so the enemy still chases and attacks from its own `Tick` |
 
 Set on `BP_HKEnemy` itself and on its components:
 
@@ -268,6 +275,7 @@ Every gameplay class has a Blueprint that derives from it, and the game uses the
 | `BP_HKGameMode` | `AHKGameMode` | `Content/Blueprints/Game` |
 | `BP_HKHUD` | `AHKHUD` | `Content/Blueprints/UI` |
 | `BP_HKHordeGenerator` | `AHKHordeGenerator` | `Content/Blueprints/Hordes` |
+| `BP_HKEnemyAIController` | `AHKEnemyAIController` | `Content/Blueprints/AI` |
 | `BP_HKEnemy` | `AHKEnemy` | `Content/Blueprints/Characters` |
 
 They contain no logic of their own. They exist so that values and components can be changed in the editor without recompiling: open one, select **Class Defaults** and edit the properties listed under [Tuning](#tuning), or select a component to swap its mesh or material.

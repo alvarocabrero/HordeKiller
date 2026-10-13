@@ -11,3 +11,12 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
+namespace HKConstants
+{
+	/**
+	 * World time, in seconds, used as "this has never happened" for timestamps such as the last shot or the
+	 * last attack. Far enough in the past that any cooldown has already elapsed when play begins.
+	 */
+	inline constexpr float NeverHappenedTime = -1000.f;
+}

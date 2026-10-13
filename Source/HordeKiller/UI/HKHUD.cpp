@@ -32,22 +32,21 @@ void AHKHUD::DrawHUD()
 		return;
 	}
 
-	const float CenterX = Canvas->ClipX * 0.5f;
-	const float CenterY = Canvas->ClipY * 0.5f;
+	const float CenterX = Canvas->ClipX / 2.f;
+	const float CenterY = Canvas->ClipY / 2.f;
 
-	// Crosshair.
-	DrawRect(FLinearColor::White, CenterX - 8.f, CenterY - 1.f, 16.f, 2.f);
-	DrawRect(FLinearColor::White, CenterX - 1.f, CenterY - 8.f, 2.f, 16.f);
+	// Crosshair: a horizontal and a vertical bar crossing at the centre.
+	DrawRect(CrosshairColor, CenterX - CrosshairLength / 2.f, CenterY - CrosshairThickness / 2.f, CrosshairLength, CrosshairThickness);
+	DrawRect(CrosshairColor, CenterX - CrosshairThickness / 2.f, CenterY - CrosshairLength / 2.f, CrosshairThickness, CrosshairLength);
 
 	UFont* Font = GEngine ? GEngine->GetMediumFont() : nullptr;
-	const float TextScale = 1.5f;
 
 	// Health, bottom-left. Rounded up so it never reads 0 while alive.
 	if (const AHKPlayer* Player = Cast<AHKPlayer>(GetOwningPawn()))
 	{
-		const FString HealthText = FString::Printf(TEXT("Health: %d / %d"),
-			FMath::CeilToInt(Player->GetHealth()), FMath::CeilToInt(Player->GetMaxHealth()));
-		DrawText(HealthText, FLinearColor::White, 40.f, Canvas->ClipY - 70.f, Font, TextScale);
+		const FText HealthText = FText::Format(HealthFormat,
+			FText::AsNumber(FMath::CeilToInt(Player->GetHealth())), FText::AsNumber(FMath::CeilToInt(Player->GetMaxHealth())));
+		DrawText(HealthText.ToString(), TextColor, TextMargin, Canvas->ClipY - HealthBottomMargin, Font, TextScale);
 	}
 
 	if (const AHKGameMode* GameMode = GetWorld()->GetAuthGameMode<AHKGameMode>())
@@ -55,20 +54,31 @@ void AHKHUD::DrawHUD()
 		// Wave counters, top-left.
 		if (const AHKHordeGenerator* Generator = GameMode->GetHordeGenerator())
 		{
-			const FString WaveText = FString::Printf(TEXT("Wave: %d   Enemies: %d   Kills: %d"),
-				Generator->GetCurrentWave(), Generator->GetEnemiesAlive(), Generator->GetKills());
-			DrawText(WaveText, FLinearColor::White, 40.f, 40.f, Font, TextScale);
+			const FText WaveText = FText::Format(WaveFormat, FText::AsNumber(Generator->GetCurrentWave()),
+				FText::AsNumber(Generator->GetEnemiesAlive()), FText::AsNumber(Generator->GetKills()));
+			DrawText(WaveText.ToString(), TextColor, TextMargin, TextMargin, Font, TextScale);
 
 			if (Generator->IsHordeComplete() && !GameMode->IsGameOver())
 			{
-				DrawText(TEXT("ALL WAVES CLEARED"), FLinearColor::Green, CenterX - 190.f, CenterY - 80.f, Font, 3.f);
+				DrawTitle(AllClearedText, AllClearedColor, Font);
 			}
 		}
 
-		// Text offsets are approximate, not measured from the text size.
 		if (GameMode->IsGameOver())
 		{
-			DrawText(TEXT("GAME OVER"), FLinearColor::Red, CenterX - 110.f, CenterY - 80.f, Font, 3.f);
+			DrawTitle(GameOverText, GameOverColor, Font);
 		}
 	}
+}
+
+void AHKHUD::DrawTitle(const FText& Text, const FLinearColor& Color, UFont* Font)
+{
+	const FString String = Text.ToString();
+
+	// Measured, so the message stays centred whatever its text or scale.
+	float Width = 0.f;
+	float Height = 0.f;
+	GetTextSize(String, Width, Height, Font, TitleScale);
+
+	DrawText(String, Color, (Canvas->ClipX - Width) / 2.f, Canvas->ClipY / 2.f - TitleRaise, Font, TitleScale);
 }

@@ -19,6 +19,15 @@
 #include "Game/HKGameMode.h"
 #include "Weapons/HKProjectile.h"
 
+namespace
+{
+	/** Bone of the body model the weapon is attached to. Fixed, because the attachment is made in the constructor. */
+	const FName WeaponSocketName(TEXT("hand_r"));
+
+	/** Priority of the player's input mapping context. There is only one context, so any value works. */
+	constexpr int32 MappingContextPriority = 0;
+}
+
 AHKPlayer::AHKPlayer()
 {
 	// Only the components are built here. Their values, and the class's, are set in BP_HKPlayer.
@@ -30,7 +39,7 @@ AHKPlayer::AHKPlayer()
 
 	// Held in the right hand of the body model.
 	GunMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("GunMesh"));
-	GunMesh->SetupAttachment(GetMesh(), TEXT("hand_r"));
+	GunMesh->SetupAttachment(GetMesh(), WeaponSocketName);
 }
 
 void AHKPlayer::CreateDefaultInputAssets()
@@ -111,7 +120,7 @@ void AHKPlayer::NotifyControllerChanged()
 				ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PC->GetLocalPlayer()))
 		{
 			CreateDefaultInputAssets();
-			Subsystem->AddMappingContext(DefaultMappingContext, 0);
+			Subsystem->AddMappingContext(DefaultMappingContext, MappingContextPriority);
 		}
 	}
 }
@@ -201,7 +210,7 @@ FVector AHKPlayer::GetAimPoint() const
 
 	FCollisionQueryParams Params(SCENE_QUERY_STAT(HKAim), false, this);
 	FHitResult Hit;
-	if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params))
+	if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, AimTraceChannel, Params))
 	{
 		return Hit.ImpactPoint;
 	}

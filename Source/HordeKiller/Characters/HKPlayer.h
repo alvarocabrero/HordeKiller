@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Characters/HKHuman.h"
+#include "HordeKiller.h"
 #include "HKPlayer.generated.h"
 
 class AHKProjectile;
@@ -99,6 +100,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (ClampMin = "0", Units = "cm"))
 	float AimRange = 20000.f;
 
+	/** Collision channel the crosshair's view line is traced against to find what the player is aiming at. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
+	TEnumAsByte<ECollisionChannel> AimTraceChannel = ECC_Visibility;
+
 	/** Projectile class spawned on each shot. Empty in C++: assigned in BP_HKPlayer. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
 	TSubclassOf<AHKProjectile> ProjectileClass;
@@ -133,5 +138,5 @@ protected:
 
 private:
 	/** World time of the last shot, in seconds. Starts far in the past so the first shot is immediate. */
-	float LastFireTime = -1000.f;
+	float LastFireTime = HKConstants::NeverHappenedTime;
 };

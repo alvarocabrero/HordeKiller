@@ -1,6 +1,7 @@
 // Copyright (c) 2026 Álvaro Cabrero Barros. Licensed under the MIT License. See LICENSE in the repository root.
 
 #include "Characters/HKEnemy.h"
+#include "HordeKiller.h"
 #include "Animation/AnimInstance.h"
 #include "Animation/AnimSequenceBase.h"
 #include "Components/CapsuleComponent.h"
@@ -49,7 +50,7 @@ void AHKEnemy::ActivateFromPool(const FVector& Location)
 	Revive();
 	StopRagdoll();
 	SetBodyTint(HealthyColor);
-	LastAttackTime = -1000.f;
+	LastAttackTime = HKConstants::NeverHappenedTime;
 
 	SetActorLocationAndRotation(Location, FRotator::ZeroRotator, false, nullptr, ETeleportType::TeleportPhysics);
 
@@ -104,7 +105,7 @@ void AHKEnemy::Tick(float DeltaSeconds)
 	const float Distance = ToPlayer.Size();
 
 	// Stop a little inside attack range, so the enemy does not shove the player.
-	if (Distance > AttackRange * 0.8f)
+	if (Distance > AttackRange * StopRangeRatio)
 	{
 		AddMovementInput(ToPlayer.GetSafeNormal());
 	}
@@ -130,7 +131,7 @@ void AHKEnemy::PlayAttackAnimation()
 	{
 		// Sped up when longer than the cooldown, so it ends before the next attack starts.
 		const float PlayRate = AttackCooldown > 0.f ? FMath::Max(1.f, LoadedAttackAnimation->GetPlayLength() / AttackCooldown) : 1.f;
-		AnimInstance->PlaySlotAnimationAsDynamicMontage(LoadedAttackAnimation, TEXT("DefaultSlot"), 0.1f, 0.2f, PlayRate);
+		AnimInstance->PlaySlotAnimationAsDynamicMontage(LoadedAttackAnimation, AttackSlotName, AttackBlendInTime, AttackBlendOutTime, PlayRate);
 	}
 }
 
@@ -175,7 +176,7 @@ void AHKEnemy::HandleDeath()
 	if (const AActor* Killer = GetLastDamageCauser())
 	{
 		Impulse = (GetActorLocation() - Killer->GetActorLocation()).GetSafeNormal2D() * DeathImpulse;
-		Impulse.Z = DeathImpulse * 0.3f;
+		Impulse.Z = DeathImpulse * DeathImpulseLift;
 	}
 	StartRagdoll(Impulse);
 

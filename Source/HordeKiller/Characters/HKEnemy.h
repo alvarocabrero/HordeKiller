@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Characters/HKHuman.h"
+#include "HordeKiller.h"
 #include "HKEnemy.generated.h"
 
 class AHKHordeGenerator;
@@ -116,6 +117,13 @@ protected:
 	float AttackCooldown = 1.f;
 
 	/**
+	 * How close the enemy gets before it stops running, as a fraction of AttackRange. Below 1 it stops a
+	 * little inside attack range, so it can hit without shoving the player.
+	 */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Enemy", meta = (ClampMin = "0", ClampMax = "1"))
+	float StopRangeRatio = 0.8f;
+
+	/**
 	 * Animation played on the body model each time the enemy attacks. It is played in the "DefaultSlot"
 	 * slot of the animation Blueprint, over the whole body, and sped up if it is longer than
 	 * AttackCooldown. Empty in C++: assign it in the enemy's Blueprint. A soft reference: the asset is
@@ -123,6 +131,18 @@ protected:
 	 */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Enemy")
 	TSoftObjectPtr<UAnimSequenceBase> AttackAnimation;
+
+	/** Montage slot of the animation Blueprint in which AttackAnimation is played. The Blueprint's graph must have a Slot node with this name. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Enemy")
+	FName AttackSlotName = TEXT("DefaultSlot");
+
+	/** Time AttackAnimation takes to blend in over the pose that was playing, in seconds. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Enemy", meta = (ClampMin = "0", Units = "s"))
+	float AttackBlendInTime = 0.1f;
+
+	/** Time AttackAnimation takes to blend back out when it ends, in seconds. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Enemy", meta = (ClampMin = "0", Units = "s"))
+	float AttackBlendOutTime = 0.2f;
 
 	/** Body colour while at full health. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Enemy")
@@ -140,6 +160,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Enemy|Death", meta = (ClampMin = "0", Units = "cm/s"))
 	float DeathImpulse = 500.f;
 
+	/** Upward part of the push given to the ragdoll at death, as a fraction of DeathImpulse. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Enemy|Death", meta = (ClampMin = "0"))
+	float DeathImpulseLift = 0.3f;
+
 private:
 	/**
 	 * The horde generator this enemy belongs to, if any. A weak pointer: the enemy does not keep the
@@ -149,7 +173,7 @@ private:
 	TWeakObjectPtr<AHKHordeGenerator> HordeGenerator;
 
 	/** World time of the last attack, in seconds. Starts far in the past so the first attack is immediate. */
-	float LastAttackTime = -1000.f;
+	float LastAttackTime = HKConstants::NeverHappenedTime;
 
 	/** True between ActivateFromPool and DeactivateToPool. */
 	bool bActiveInPool = false;

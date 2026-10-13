@@ -55,9 +55,9 @@ void AHKHuman::StartRagdoll(const FVector& Impulse)
 		return;
 	}
 
-	// "Ragdoll" is the engine preset for this: collides with the world, ignores pawns.
+	// The profile decides what the ragdoll collides with.
 	USkeletalMeshComponent* Body = GetMesh();
-	Body->SetCollisionProfileName(TEXT("Ragdoll"));
+	Body->SetCollisionProfileName(RagdollCollisionProfile);
 	// Explicit, because StopRagdoll turns collision off and the profile name alone would not turn it back on.
 	Body->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	Body->SetSimulatePhysics(true);
@@ -87,13 +87,12 @@ void AHKHuman::SetBodyTint(const FLinearColor& Color)
 		return;
 	}
 
-	// "Paint Tint" is the colour parameter of the mannequin's materials.
 	USkeletalMeshComponent* Body = GetMesh();
 	for (int32 Index = 0; Index < Body->GetNumMaterials(); ++Index)
 	{
 		if (UMaterialInstanceDynamic* Material = Body->CreateDynamicMaterialInstance(Index))
 		{
-			Material->SetVectorParameterValue(TEXT("Paint Tint"), Color);
+			Material->SetVectorParameterValue(TintParameterName, Color);
 		}
 	}
 }

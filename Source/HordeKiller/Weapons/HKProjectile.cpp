@@ -62,7 +62,7 @@ void AHKProjectile::OnHit(UPrimitiveComponent* HitComponent, AActor* OtherActor,
 
 	// Enemies are not simulated bodies, so the knockback goes through their movement component.
 	FVector Knockback = PreHitVelocity.GetSafeNormal2D() * KnockbackStrength;
-	Knockback.Z = KnockbackStrength * 0.3f;
+	Knockback.Z = KnockbackStrength * KnockbackLift;
 	Enemy->LaunchCharacter(Knockback, true, true);
 
 	UGameplayStatics::ApplyDamage(Enemy, Damage, GetInstigatorController(), this, nullptr);

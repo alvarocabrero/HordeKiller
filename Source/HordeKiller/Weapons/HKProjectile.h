@@ -86,6 +86,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile")
 	float KnockbackStrength = 350.f;
 
+	/** Upward part of the knockback, as a fraction of KnockbackStrength. It lifts the enemy off the ground for a moment. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Projectile", meta = (ClampMin = "0"))
+	float KnockbackLift = 0.3f;
+
 private:
 	/**
 	 * Velocity of the sphere as of the last frame, in cm/s.

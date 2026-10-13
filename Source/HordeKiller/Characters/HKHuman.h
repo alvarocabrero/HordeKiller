@@ -119,6 +119,14 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Animation")
 	TSubclassOf<UHKAnimLayerInstance> AnimLayerClass;
 
+	/** Collision profile given to the body while it is a ragdoll. The engine's "Ragdoll" collides with the world and ignores pawns. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Appearance")
+	FName RagdollCollisionProfile = TEXT("Ragdoll");
+
+	/** Vector parameter of the body's materials that SetBodyTint writes to. "Paint Tint" is the one the mannequin materials use. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Appearance")
+	FName TintParameterName = TEXT("Paint Tint");
+
 private:
 	/** The actor that dealt the most recent damage. Weak, because projectiles destroy themselves on impact. */
 	TWeakObjectPtr<AActor> LastDamageCauser;
