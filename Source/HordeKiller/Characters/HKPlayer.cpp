@@ -50,8 +50,7 @@ AHKPlayer::AHKPlayer()
 
 	// Cosmetic weapon: a cube scaled into a bar, held in the right hand.
 	GunMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("GunMesh"));
-	GunMesh->SetupAttachment(GetMesh(), TEXT("hand_r"));
-	GunMesh->SetRelativeLocation(FVector(-10.f, 4.f, 0.f));
+	GunMesh->SetupAttachment(GetMesh());
 	GunMesh->SetRelativeScale3D(FVector(0.5f, 0.08f, 0.08f));
 	GunMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GunMesh->SetCastShadow(false);
@@ -76,6 +75,17 @@ void AHKPlayer::BeginPlay()
 	// Read here so that values edited in a Blueprint apply.
 	CameraBoom->TargetArmLength = CameraDistance;
 	CameraBoom->SocketOffset = CameraOffset;
+
+	// The hand only exists once the body model is on the mesh component, which happens in Super::BeginPlay.
+	if (HasBodyModel())
+	{
+		GunMesh->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_r"));
+		GunMesh->SetRelativeLocation(FVector(-10.f, 4.f, 0.f));
+	}
+	else
+	{
+		GunMesh->SetVisibility(false);
+	}
 }
 
 void AHKPlayer::CreateDefaultInputAssets()
