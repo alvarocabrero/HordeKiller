@@ -1,0 +1,8 @@
+The models and textures in this folder come from "Medieval Village MegaKit" (Standard version) by Quaternius.
+https://quaternius.itch.io/medieval-village-megakit
+
+The materials were rebuilt for this project by Tools/import_medieval_village.py; the M_HKVillage* parent
+materials are part of this project, not of the kit.
+
+License: CC0 1.0 Universal (Public Domain Dedication)
+https://creativecommons.org/publicdomain/zero/1.0/

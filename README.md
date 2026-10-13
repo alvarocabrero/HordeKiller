@@ -177,6 +177,8 @@ To add another level, create it in the editor, give it a floor, a `PlayerStart` 
 
 `Tools/create_arena_level.py` generated `Test_HKArenaMap` and its materials. It does nothing if the level already exists, so it never overwrites edits; it is only useful to recreate the level after deleting it.
 
+There is a second test level, `Content/Maps/Test/Test_HKVillageMap`: a 40 m paved square enclosed by houses, built from Quaternius's Medieval Village MegaKit (CC0). It is not the default map; open it from the Content Browser to play in it. The houses cannot be entered and invisible walls along their fronts keep the player and the enemies in the square. `Tools/import_medieval_village.py` imported the kit into `Content/ThirdParty/Quaternius/MedievalVillage` and `Tools/create_village_level.py` generated the level; like the arena script, it does nothing if the level already exists.
+
 ## Character models
 
 The player and the enemies are humanoids: Epic's mannequins, **Quinn** for the player and **Manny** for the enemies, driven by the animation Blueprint `ABP_HKHuman`, which gives them idle, walk, run and jump animations.
@@ -261,13 +263,18 @@ Content/
     DA_HKHorde_Default        Default horde config (data asset of class UHKHordeConfig)
   Maps/Test/
     Test_HKArenaMap            The arena level, used for testing
+    Test_HKVillageMap         The village level, a second test level
   Materials/
     MI_HKArenaFloor           Material of the arena floor
     MI_HKArenaWall            Material of the arena walls
+    MI_HKVillageGround        Cobblestone ground of the village level
+  ThirdParty/Quaternius/      CC0 assets by Quaternius: zombie and running animations, and the Medieval Village kit
 Tools/
   create_blueprints.py        Script that generates the Blueprints from the C++ classes
   create_horde_configs.py     Script that generates the horde config data assets
   create_arena_level.py       Script that generates the arena level and its materials
+  import_medieval_village.py  Script that imports the Medieval Village kit and builds its materials
+  create_village_level.py     Script that generates the village level
   install_mannequins.py       Script that copies Epic's mannequins from the engine (not in git)
   create_anim_blueprint.py    Script that recreates ABP_HKHuman from the engine's ABP if it is deleted
 Source/
