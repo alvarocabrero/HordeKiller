@@ -10,11 +10,16 @@ class AHKProjectile;
 class UCameraComponent;
 class UInputAction;
 class UInputMappingContext;
+class USpringArmComponent;
 class UStaticMeshComponent;
 struct FInputActionValue;
 
 /**
- * The player: a first-person character armed with a weapon that fires physics projectiles.
+ * The player: a third-person character armed with a weapon that fires physics projectiles.
+ *
+ * The camera sits behind and over the right shoulder, on a boom that shortens when something gets
+ * between it and the player. The body turns with the view, so the player always faces where they aim,
+ * and shots go to the point under the crosshair.
  *
  * Input uses the Enhanced Input system. So that the game is playable without creating any assets in
  * the editor, the input actions and the key mappings are built in code the first time they are needed.
@@ -29,12 +34,15 @@ class HORDEKILLER_API AHKPlayer : public AHKHuman
 	GENERATED_BODY()
 
 public:
-	/** Creates the camera and weapon components and configures first-person movement. */
+	/** Creates the camera and weapon components and configures third-person movement. */
 	AHKPlayer();
 
 protected:
 	/** Stops the player's movement and input and notifies the game mode. Called once by AHKHuman when health reaches zero. */
 	virtual void HandleDeath() override;
+
+	/** Applies CameraDistance and CameraOffset to the boom, so values edited in a Blueprint take effect. */
+	virtual void BeginPlay() override;
 
 	/** Registers the input mapping context with the local player whenever a player controller takes over. */
 	virtual void NotifyControllerChanged() override;
@@ -60,8 +68,11 @@ protected:
 	 */
 	void Look(const FInputActionValue& Value);
 
-	/** Fires one projectile along the aim direction, if the fire interval has elapsed. */
+	/** Fires one projectile from the player's chest towards the point under the crosshair, if the fire interval has elapsed. */
 	void Fire();
+
+	/** @return The world position the crosshair points at: the first thing the camera's view line hits, or a far point along it. */
+	FVector GetAimPoint() const;
 
 	/**
 	 * Creates, in code, every input action and the mapping context that have not been assigned.
@@ -71,13 +82,33 @@ protected:
 	void CreateDefaultInputAssets();
 
 protected:
-	/** First-person camera at eye height. It follows the controller's rotation, including pitch. */
+	/** Boom that holds the camera behind the player. It follows the controller's rotation and shortens to avoid walls. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
-	TObjectPtr<UCameraComponent> FirstPersonCamera;
+	TObjectPtr<USpringArmComponent> CameraBoom;
 
-	/** Placeholder weapon: a stretched cube attached to the camera, with no collision. */
+	/** Third-person camera at the end of the boom. */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
+	TObjectPtr<UCameraComponent> FollowCamera;
+
+	/** Placeholder weapon: a stretched cube in the body's right hand, with no collision. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
 	TObjectPtr<UStaticMeshComponent> GunMesh;
+
+	/** Distance from the player to the camera, in cm. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera", meta = (ClampMin = "0", Units = "cm"))
+	float CameraDistance = 350.f;
+
+	/** Offset of the camera from the end of the boom, in cm: X forward, Y to the right, Z up. Y moves the player off the crosshair. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
+	FVector CameraOffset = FVector(0.f, 60.f, 70.f);
+
+	/** Height above the centre of the capsule from which projectiles are fired, in cm. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (Units = "cm"))
+	float MuzzleHeight = 50.f;
+
+	/** How far the crosshair's view line is checked for something to aim at, in cm. */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (ClampMin = "0", Units = "cm"))
+	float AimRange = 20000.f;
 
 	/** Projectile class spawned on each shot. Replace it with a child Blueprint to change the projectile's look or values. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
@@ -87,7 +118,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
 	float FireInterval = 0.2f;
 
-	/** Distance in front of the camera at which projectiles spawn, in cm. Must be large enough to clear the player's own capsule. */
+	/** Distance in front of the player at which projectiles spawn, in cm. Must be large enough to clear the player's own capsule. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
 	float MuzzleDistance = 100.f;
 

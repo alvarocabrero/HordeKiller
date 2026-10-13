@@ -3,13 +3,16 @@
 #include "Characters/HKPlayer.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/LocalPlayer.h"
 #include "Engine/StaticMesh.h"
+#include "Engine/World.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/PlayerController.h"
+#include "GameFramework/SpringArmComponent.h"
 #include "InputAction.h"
 #include "InputActionValue.h"
 #include "InputMappingContext.h"
@@ -22,7 +25,7 @@ AHKPlayer::AHKPlayer()
 {
 	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.f);
 
-	// First person: the body follows the view's yaw only; the camera handles pitch.
+	// The body follows the view's yaw only, so the player faces where they aim; the boom handles pitch.
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = true;
 	bUseControllerRotationRoll = false;
@@ -34,16 +37,21 @@ AHKPlayer::AHKPlayer()
 	Movement->MaxWalkSpeed = 600.f; // Faster than the enemies (380).
 	Movement->BrakingDecelerationWalking = 2000.f;
 
-	// Camera at eye height, copying the controller's full rotation.
-	FirstPersonCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FirstPersonCamera"));
-	FirstPersonCamera->SetupAttachment(GetCapsuleComponent());
-	FirstPersonCamera->SetRelativeLocation(FVector(0.f, 0.f, 64.f));
-	FirstPersonCamera->bUsePawnControlRotation = true;
+	// The boom copies the controller's full rotation and pulls in when something blocks the view.
+	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
+	CameraBoom->SetupAttachment(GetCapsuleComponent());
+	CameraBoom->TargetArmLength = CameraDistance;
+	CameraBoom->SocketOffset = CameraOffset;
+	CameraBoom->bUsePawnControlRotation = true;
 
-	// Cosmetic weapon: a cube scaled into a bar, fixed in front of the camera.
+	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
+	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
+	FollowCamera->bUsePawnControlRotation = false;
+
+	// Cosmetic weapon: a cube scaled into a bar, held in the right hand.
 	GunMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("GunMesh"));
-	GunMesh->SetupAttachment(FirstPersonCamera);
-	GunMesh->SetRelativeLocation(FVector(45.f, 22.f, -18.f));
+	GunMesh->SetupAttachment(GetMesh(), TEXT("hand_r"));
+	GunMesh->SetRelativeLocation(FVector(-10.f, 4.f, 0.f));
 	GunMesh->SetRelativeScale3D(FVector(0.5f, 0.08f, 0.08f));
 	GunMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GunMesh->SetCastShadow(false);
@@ -57,10 +65,17 @@ AHKPlayer::AHKPlayer()
 	ProjectileClass = AHKProjectile::StaticClass();
 	MaxHealth = 100.f;
 
-	// The player uses Quinn. First person: the owner does not see the body, only its shadow.
+	// The player uses Quinn.
 	BodyModel = FSoftObjectPath(TEXT("/Game/Characters/Mannequins/Meshes/SKM_Quinn_Simple.SKM_Quinn_Simple"));
-	GetMesh()->SetOwnerNoSee(true);
-	GetMesh()->bCastHiddenShadow = true;
+}
+
+void AHKPlayer::BeginPlay()
+{
+	Super::BeginPlay();
+
+	// Read here so that values edited in a Blueprint apply.
+	CameraBoom->TargetArmLength = CameraDistance;
+	CameraBoom->SocketOffset = CameraOffset;
 }
 
 void AHKPlayer::CreateDefaultInputAssets()
@@ -200,10 +215,12 @@ void AHKPlayer::Fire()
 	}
 	LastFireTime = Now;
 
-	// Spawn in front of the camera, along the aim line, clear of the player's capsule.
-	const FRotator AimRotation = GetControlRotation();
-	const FVector AimDirection = AimRotation.Vector();
-	const FVector SpawnLocation = FirstPersonCamera->GetComponentLocation() + AimDirection * MuzzleDistance;
+	// The camera is off to one side, so shots leave the chest and converge on what the crosshair points at.
+	const FVector Muzzle = GetActorLocation() + FVector(0.f, 0.f, MuzzleHeight);
+	const FVector AimDirection = (GetAimPoint() - Muzzle).GetSafeNormal();
+	const FRotator AimRotation = AimDirection.Rotation();
+	// Along the aim line, clear of the player's capsule.
+	const FVector SpawnLocation = Muzzle + AimDirection * MuzzleDistance;
 
 	FActorSpawnParameters Params;
 	Params.Owner = this;
@@ -215,6 +232,25 @@ void AHKPlayer::Fire()
 	{
 		Projectile->Launch(AimDirection);
 	}
+}
+
+FVector AHKPlayer::GetAimPoint() const
+{
+	const FVector ViewLocation = FollowCamera->GetComponentLocation();
+	const FVector ViewDirection = FollowCamera->GetForwardVector();
+
+	// Start level with the player, so nothing between the camera and the player is picked.
+	const float ToPlayer = FVector::DotProduct(GetActorLocation() - ViewLocation, ViewDirection);
+	const FVector Start = ViewLocation + ViewDirection * FMath::Max(0.f, ToPlayer);
+	const FVector End = ViewLocation + ViewDirection * AimRange;
+
+	FCollisionQueryParams Params(SCENE_QUERY_STAT(HKAim), false, this);
+	FHitResult Hit;
+	if (GetWorld()->LineTraceSingleByChannel(Hit, Start, End, ECC_Visibility, Params))
+	{
+		return Hit.ImpactPoint;
+	}
+	return End;
 }
 
 void AHKPlayer::HandleDeath()

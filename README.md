@@ -111,7 +111,11 @@ Every gameplay value is an editable property. For the player and the enemy, edit
 | Property | Default | Meaning |
 | --- | --- | --- |
 | `FireInterval` | 0.2 | Time between shots while fire is held |
-| `MuzzleDistance` | 100 | Distance in front of the camera where projectiles spawn |
+| `MuzzleDistance` | 100 | Distance in front of the player where projectiles spawn |
+| `MuzzleHeight` | 50 | Height above the centre of the player from which projectiles are fired |
+| `AimRange` | 20000 | How far the crosshair's view line is checked for something to aim at |
+| `CameraDistance` | 350 | Distance from the player to the third-person camera |
+| `CameraOffset` | (0, 60, 70) | Offset of the camera from the end of its boom: forward, right, up |
 | `MaxHealth` | 100 | Starting health (property inherited from `AHKHuman`) |
 | `ProjectileClass` | `AHKProjectile` | Projectile spawned on each shot |
 
@@ -184,7 +188,7 @@ There is a second test level, `Content/Maps/Test/Test_HKVillageMap`: a 40 m pave
 The player and the enemies are humanoids: Epic's mannequins, **Quinn** for the player and **Manny** for the enemies, driven by the animation Blueprint `ABP_HKHuman`, which gives them idle, walk, run and jump animations.
 
 - **Enemies** are tinted red, and turn orange after the first hit, using the `HealthyColor` and `WoundedColor` properties.
-- **The player** is seen in first person, so the body is hidden from the player's own camera and only casts its shadow.
+- **The player** is seen in third person, from a camera behind and over the right shoulder. The body turns with the view, so the player always faces where they aim.
 
 ### Where the models come from
 
@@ -466,7 +470,7 @@ The source files are commented in detail and are the best reference for the spec
 
 - Enemies do not use navigation. They walk in a straight line towards the player and will get stuck on obstacles if any are added.
 - Characters use the stock mannequins with locomotion animations only: there are no attack or hit animations. The arena and the weapon are placeholder shapes, and there are no effects or sounds.
-- The player has no first-person arms or weapon model; the weapon is a floating bar.
+- The player has no weapon model or aiming animation; the weapon is a bar in the right hand, and shots leave the chest.
 - There is no menu, pause screen or score saving.
 - Single-player only.
 
