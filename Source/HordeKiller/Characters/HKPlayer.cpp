@@ -6,7 +6,6 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/StaticMeshComponent.h"
 #include "Engine/LocalPlayer.h"
-#include "Engine/StaticMesh.h"
 #include "Engine/World.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
@@ -19,70 +18,19 @@
 #include "InputModifiers.h"
 #include "Game/HKGameMode.h"
 #include "Weapons/HKProjectile.h"
-#include "UObject/ConstructorHelpers.h"
 
 AHKPlayer::AHKPlayer()
 {
-	GetCapsuleComponent()->InitCapsuleSize(42.f, 96.f);
-
-	// The body follows the view's yaw only, so the player faces where they aim; the boom handles pitch.
-	bUseControllerRotationPitch = false;
-	bUseControllerRotationYaw = true;
-	bUseControllerRotationRoll = false;
-
-	UCharacterMovementComponent* Movement = GetCharacterMovement();
-	Movement->bOrientRotationToMovement = false;
-	Movement->JumpZVelocity = 600.f;
-	Movement->AirControl = 0.35f;
-	Movement->MaxWalkSpeed = 600.f; // Faster than the enemies (380).
-	Movement->BrakingDecelerationWalking = 2000.f;
-
-	// The boom copies the controller's full rotation and pulls in when something blocks the view.
+	// Only the components are built here. Their values, and the class's, are set in BP_HKPlayer.
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	CameraBoom->SetupAttachment(GetCapsuleComponent());
-	CameraBoom->TargetArmLength = CameraDistance;
-	CameraBoom->SocketOffset = CameraOffset;
-	CameraBoom->bUsePawnControlRotation = true;
 
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
-	FollowCamera->bUsePawnControlRotation = false;
 
-	// Cosmetic weapon: a cube scaled into a bar, held in the right hand.
+	// Held in the right hand of the body model.
 	GunMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("GunMesh"));
-	GunMesh->SetupAttachment(GetMesh());
-	GunMesh->SetRelativeScale3D(FVector(0.5f, 0.08f, 0.08f));
-	GunMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	GunMesh->SetCastShadow(false);
-
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> CubeMesh(TEXT("/Engine/BasicShapes/Cube.Cube"));
-	if (CubeMesh.Succeeded())
-	{
-		GunMesh->SetStaticMesh(CubeMesh.Object);
-	}
-
-	ProjectileClass = AHKProjectile::StaticClass();
-	MaxHealth = 100.f;
-}
-
-void AHKPlayer::BeginPlay()
-{
-	Super::BeginPlay();
-
-	// Read here so that values edited in a Blueprint apply.
-	CameraBoom->TargetArmLength = CameraDistance;
-	CameraBoom->SocketOffset = CameraOffset;
-
-	// The hand only exists once the body model is on the mesh component, which happens in Super::BeginPlay.
-	if (HasBodyModel())
-	{
-		GunMesh->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetNotIncludingScale, TEXT("hand_r"));
-		GunMesh->SetRelativeLocation(FVector(-10.f, 4.f, 0.f));
-	}
-	else
-	{
-		GunMesh->SetVisibility(false);
-	}
+	GunMesh->SetupAttachment(GetMesh(), TEXT("hand_r"));
 }
 
 void AHKPlayer::CreateDefaultInputAssets()

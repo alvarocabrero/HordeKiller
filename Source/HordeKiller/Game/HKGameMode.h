@@ -21,8 +21,8 @@ class UHKHordeConfig;
  * UHKHordeConfig data asset it reads. If the level contains a generator, that one is used as it is;
  * otherwise the game mode spawns one with DefaultHordeConfig.
  *
- * It selects the player character and HUD classes too, so no Blueprint game mode is required. For the
- * player it uses the Blueprint BP_HKPlayer when it exists, and falls back to the C++ class otherwise.
+ * The player character class, the HUD class and the default horde config are not named in code: they
+ * are set in the Class Defaults of BP_HKGameMode, which is the game mode the project uses.
  */
 UCLASS()
 class HORDEKILLER_API AHKGameMode : public AGameModeBase
@@ -30,9 +30,6 @@ class HORDEKILLER_API AHKGameMode : public AGameModeBase
 	GENERATED_BODY()
 
 public:
-	/** Selects the default pawn and HUD classes and the default horde config. */
-	AHKGameMode();
-
 	/** Called by the player character when it dies. Ends the game, stops the horde and schedules a level restart. */
 	void NotifyPlayerDied();
 
@@ -65,8 +62,8 @@ protected:
 
 protected:
 	/**
-	 * Horde used in levels that have no horde generator of their own. Defaults to the asset
-	 * DA_HKHorde_Default. To give a level a different horde, place a horde generator in it and assign
+	 * Horde used in levels that have no horde generator of their own. Empty in C++: BP_HKGameMode sets
+	 * it to DA_HKHorde_Default. To give a level a different horde, place a horde generator in it and assign
 	 * its config there; this property is then ignored for that level.
 	 */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Horde")

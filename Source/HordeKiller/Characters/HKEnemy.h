@@ -8,9 +8,7 @@
 
 class AHKHordeGenerator;
 class UAnimSequenceBase;
-class UMaterialInstanceDynamic;
 class UPhysicsControlComponent;
-class UStaticMeshComponent;
 
 /**
  * Horde enemy.
@@ -37,7 +35,7 @@ class HORDEKILLER_API AHKEnemy : public AHKHuman
 	GENERATED_BODY()
 
 public:
-	/** Builds the placeholder body and configures movement, AI possession and the physics control component. */
+	/** Creates the physics control component. Movement, AI possession and health are set in BP_HKEnemy. */
 	AHKEnemy();
 
 	/**
@@ -74,7 +72,7 @@ public:
 	virtual void Tick(float DeltaSeconds) override;
 
 protected:
-	/** Initialises walk speed and the body colour once the enemy is in the world. */
+	/** Loads the attack animation and applies the body colour once the enemy is in the world. */
 	virtual void BeginPlay() override;
 
 	/**
@@ -96,14 +94,7 @@ protected:
 	/** Plays AttackAnimation on the body model. Has no effect if there is no animation or no body model. */
 	void PlayAttackAnimation();
 
-	/** Applies the given colour to whichever body is showing: the humanoid model or the placeholder cylinder. */
-	void SetBodyColor(const FLinearColor& Color);
-
 protected:
-	/** Placeholder body: an engine cylinder scaled to fill the collision capsule. Hidden when the humanoid body model is available. */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy")
-	TObjectPtr<UStaticMeshComponent> BodyMesh;
-
 	/**
 	 * Physics Control component for the body, from the engine's PhysicsControl plugin. It can drive
 	 * simulated bones towards the animation, for partial ragdolls or physical hit reactions. It is added
@@ -111,10 +102,6 @@ protected:
 	 */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy")
 	TObjectPtr<UPhysicsControlComponent> PhysicsControl;
-
-	/** Running speed, in cm/s. The player moves at 600 cm/s by default, so slower values can be outrun. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Enemy")
-	float MoveSpeed = 380.f;
 
 	/** Damage dealt to the player by each attack. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Enemy")
@@ -169,10 +156,6 @@ private:
 
 	/** Timer that removes the corpse after CorpseLifetime. */
 	FTimerHandle CorpseTimer;
-
-	/** Per-instance material of the placeholder cylinder. UPROPERTY keeps it from being garbage collected. */
-	UPROPERTY()
-	TObjectPtr<UMaterialInstanceDynamic> BodyMaterial;
 
 	/** AttackAnimation once loaded, or null if it is empty or there is no body model. UPROPERTY keeps it from being garbage collected. */
 	UPROPERTY()

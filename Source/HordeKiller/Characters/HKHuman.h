@@ -18,8 +18,8 @@
  *     the Mesh component of each character's Blueprint (BP_HKPlayer, BP_HKEnemy), in its Skeletal
  *     Mesh Asset and Anim Class fields. The model is optional. The ones in use (Epic's mannequins)
  *     are not stored in the repository, so when they are missing, or when the C++ class is used
- *     without its Blueprint, the character simply has no body model and subclasses keep their
- *     placeholder shapes.
+ *     without its Blueprint, the character simply has no body model and cannot be seen. The offset
+ *     that stands the model on the capsule is set on the same component, also in the Blueprint.
  *
  * The class is abstract: it cannot be spawned or placed in a level on its own.
  */
@@ -29,9 +29,6 @@ class HORDEKILLER_API AHKHuman : public ACharacter
 	GENERATED_BODY()
 
 public:
-	/** Orients the mesh component for a body model. The model itself is assigned on that component in each character's Blueprint. */
-	AHKHuman();
-
 	/**
 	 * Applies incoming damage and triggers the damaged or death hook.
 	 *
@@ -59,7 +56,7 @@ public:
 	bool HasBodyModel() const { return bHasBodyModel; }
 
 protected:
-	/** Registers with the actor manager, fills health from MaxHealth and stands the body model, if any, on the capsule. */
+	/** Registers with the actor manager, fills health from MaxHealth and notes whether there is a body model. */
 	virtual void BeginPlay() override;
 
 	/**
@@ -104,7 +101,7 @@ protected:
 	void SetBodyTint(const FLinearColor& Color);
 
 private:
-	/** Attaches the mesh component to the capsule with its feet at the bottom, facing forward. */
+	/** Attaches the mesh component to the capsule again, at the offset it has in the character's Blueprint. */
 	void PlaceBodyOnCapsule();
 
 protected:

@@ -24,7 +24,7 @@ class HORDEKILLER_API AHKProjectile : public AActor
 	GENERATED_BODY()
 
 public:
-	/** Sets up the simulated sphere, its collision and the hit callback. */
+	/** Creates the mesh component and binds the hit callback. The sphere, its physics and its collision are set in BP_HKProjectile. */
 	AHKProjectile();
 
 	/**

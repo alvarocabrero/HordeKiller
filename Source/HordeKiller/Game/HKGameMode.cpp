@@ -7,32 +7,10 @@
 #include "Characters/HKPlayer.h"
 #include "Hordes/HKHordeConfig.h"
 #include "Hordes/HKHordeGenerator.h"
-#include "UI/HKHUD.h"
 #include "Managers/HKActorManager.h"
 #include "TimerManager.h"
-#include "UObject/ConstructorHelpers.h"
 
 DEFINE_LOG_CATEGORY_STATIC(LogHordeKiller, Log, All);
-
-AHKGameMode::AHKGameMode()
-{
-	DefaultPawnClass = AHKPlayer::StaticClass();
-	HUDClass = AHKHUD::StaticClass();
-
-	// Prefer the player Blueprint; if the asset is missing the C++ class stays.
-	static ConstructorHelpers::FClassFinder<AHKPlayer> PlayerBlueprint(TEXT("/Game/Blueprints/Characters/BP_HKPlayer"));
-	if (PlayerBlueprint.Succeeded())
-	{
-		DefaultPawnClass = PlayerBlueprint.Class;
-	}
-
-	// Horde for levels without their own generator.
-	static ConstructorHelpers::FObjectFinder<UHKHordeConfig> DefaultHorde(TEXT("/Game/Data/Hordes/DA_HKHorde_Default.DA_HKHorde_Default"));
-	if (DefaultHorde.Succeeded())
-	{
-		DefaultHordeConfig = DefaultHorde.Object;
-	}
-}
 
 void AHKGameMode::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {

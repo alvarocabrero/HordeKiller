@@ -5,57 +5,22 @@
 #include "Animation/AnimSequenceBase.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
-#include "Components/StaticMeshComponent.h"
-#include "Engine/StaticMesh.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
-#include "Materials/MaterialInstanceDynamic.h"
 #include "Misc/PackageName.h"
 #include "Characters/HKPlayer.h"
 #include "Hordes/HKHordeGenerator.h"
 #include "Managers/HKActorManager.h"
 #include "PhysicsControlComponent.h"
 #include "TimerManager.h"
-#include "UObject/ConstructorHelpers.h"
 
 AHKEnemy::AHKEnemy()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	// Spawned enemies need an AI controller, or their movement input is never consumed.
-	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
-
-	GetCapsuleComponent()->InitCapsuleSize(34.f, 88.f);
-
-	// Visual only; collisions use the capsule. Scaled to fill it.
-	BodyMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("BodyMesh"));
-	BodyMesh->SetupAttachment(RootComponent);
-	BodyMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	BodyMesh->SetRelativeScale3D(FVector(0.68f, 0.68f, 1.76f));
-
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> CylinderMesh(TEXT("/Engine/BasicShapes/Cylinder.Cylinder"));
-	if (CylinderMesh.Succeeded())
-	{
-		BodyMesh->SetStaticMesh(CylinderMesh.Object);
-	}
-
-	// No controls yet; ready for partial ragdolls or hit reactions.
+	// No controls yet; ready for partial ragdolls or hit reactions. Every other value is set in BP_HKEnemy.
 	PhysicsControl = CreateDefaultSubobject<UPhysicsControlComponent>(TEXT("PhysicsControl"));
-
-	UCharacterMovementComponent* Movement = GetCharacterMovement();
-	Movement->bOrientRotationToMovement = true;
-	Movement->RotationRate = FRotator(0.f, 540.f, 0.f);
-
-	// Keeps the horde from collapsing into a single queue behind the player.
-	Movement->bUseRVOAvoidance = true;
-	Movement->AvoidanceConsiderationRadius = 150.f;
-
-	bUseControllerRotationYaw = false;
-
-	// Two projectile hits at the default damage of 1.
-	MaxHealth = 2.f;
 }
-
 void AHKEnemy::SetHordeGenerator(AHKHordeGenerator* InGenerator)
 {
 	HordeGenerator = InGenerator;
@@ -65,38 +30,16 @@ void AHKEnemy::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Read here so that values edited in a Blueprint apply.
-	GetCharacterMovement()->MaxWalkSpeed = MoveSpeed;
-
-	// With a body model the placeholder cylinder is not needed.
-	if (HasBodyModel())
+	// Checked first because loading a missing asset logs a warning.
+	if (HasBodyModel() && !AttackAnimation.IsNull() && FPackageName::DoesPackageExist(AttackAnimation.GetLongPackageName()))
 	{
-		BodyMesh->SetVisibility(false);
-
-		// Checked first because loading a missing asset logs a warning.
-		if (!AttackAnimation.IsNull() && FPackageName::DoesPackageExist(AttackAnimation.GetLongPackageName()))
-		{
-			LoadedAttackAnimation = AttackAnimation.LoadSynchronous();
-		}
-	}
-	else
-	{
-		BodyMaterial = BodyMesh->CreateDynamicMaterialInstance(0);
+		LoadedAttackAnimation = AttackAnimation.LoadSynchronous();
 	}
 
-	SetBodyColor(HealthyColor);
+	SetBodyTint(HealthyColor);
 
 	// An enemy placed in a level by hand is in play from the start.
 	bActiveInPool = true;
-}
-
-void AHKEnemy::SetBodyColor(const FLinearColor& Color)
-{
-	SetBodyTint(Color);
-	if (BodyMaterial)
-	{
-		BodyMaterial->SetVectorParameterValue(TEXT("Color"), Color);
-	}
 }
 
 void AHKEnemy::ActivateFromPool(const FVector& Location)
@@ -105,7 +48,7 @@ void AHKEnemy::ActivateFromPool(const FVector& Location)
 
 	Revive();
 	StopRagdoll();
-	SetBodyColor(HealthyColor);
+	SetBodyTint(HealthyColor);
 	LastAttackTime = -1000.f;
 
 	SetActorLocationAndRotation(Location, FRotator::ZeroRotator, false, nullptr, ETeleportType::TeleportPhysics);
@@ -195,7 +138,7 @@ void AHKEnemy::HandleDamaged(float DamageApplied)
 {
 	Super::HandleDamaged(DamageApplied);
 
-	SetBodyColor(WoundedColor);
+	SetBodyTint(WoundedColor);
 }
 
 void AHKEnemy::HandleDeath()

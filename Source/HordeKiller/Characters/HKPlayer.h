@@ -34,15 +34,12 @@ class HORDEKILLER_API AHKPlayer : public AHKHuman
 	GENERATED_BODY()
 
 public:
-	/** Creates the camera and weapon components and configures third-person movement. */
+	/** Creates the camera and weapon components. Their values, and the movement's, are set in BP_HKPlayer. */
 	AHKPlayer();
 
 protected:
 	/** Stops the player's movement and input and notifies the game mode. Called once by AHKHuman when health reaches zero. */
 	virtual void HandleDeath() override;
-
-	/** Applies CameraDistance and CameraOffset to the boom, so values edited in a Blueprint take effect. */
-	virtual void BeginPlay() override;
 
 	/** Registers the input mapping context with the local player whenever a player controller takes over. */
 	virtual void NotifyControllerChanged() override;
@@ -82,7 +79,7 @@ protected:
 	void CreateDefaultInputAssets();
 
 protected:
-	/** Boom that holds the camera behind the player. It follows the controller's rotation and shortens to avoid walls. */
+	/** Boom that holds the camera behind the player. Its length, offset and rotation settings are set on it in BP_HKPlayer. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	TObjectPtr<USpringArmComponent> CameraBoom;
 
@@ -90,17 +87,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Camera")
 	TObjectPtr<UCameraComponent> FollowCamera;
 
-	/** Placeholder weapon: a stretched cube in the body's right hand, with no collision. */
+	/** Placeholder weapon, attached to the body's right hand. Its mesh, size and collision are set on it in BP_HKPlayer. */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Weapon")
 	TObjectPtr<UStaticMeshComponent> GunMesh;
-
-	/** Distance from the player to the camera, in cm. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera", meta = (ClampMin = "0", Units = "cm"))
-	float CameraDistance = 350.f;
-
-	/** Offset of the camera from the end of the boom, in cm: X forward, Y to the right, Z up. Y moves the player off the crosshair. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Camera")
-	FVector CameraOffset = FVector(0.f, 60.f, 70.f);
 
 	/** Height above the centre of the capsule from which projectiles are fired, in cm. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (Units = "cm"))
@@ -110,7 +99,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon", meta = (ClampMin = "0", Units = "cm"))
 	float AimRange = 20000.f;
 
-	/** Projectile class spawned on each shot. Replace it with a child Blueprint to change the projectile's look or values. */
+	/** Projectile class spawned on each shot. Empty in C++: assigned in BP_HKPlayer. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Weapon")
 	TSubclassOf<AHKProjectile> ProjectileClass;
 

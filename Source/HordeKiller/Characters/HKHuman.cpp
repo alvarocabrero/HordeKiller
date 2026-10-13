@@ -7,13 +7,6 @@
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Managers/HKActorManager.h"
 
-AHKHuman::AHKHuman()
-{
-	// The mannequin faces +Y; characters face +X.
-	GetMesh()->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
-	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-}
-
 void AHKHuman::BeginPlay()
 {
 	Super::BeginPlay();
@@ -25,10 +18,6 @@ void AHKHuman::BeginPlay()
 
 	// The model is assigned on the mesh component in the character's Blueprint; it may be missing.
 	bHasBodyModel = GetMesh()->GetSkeletalMeshAsset() != nullptr;
-	if (bHasBodyModel)
-	{
-		PlaceBodyOnCapsule();
-	}
 }
 
 void AHKHuman::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -40,11 +29,10 @@ void AHKHuman::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 void AHKHuman::PlaceBodyOnCapsule()
 {
-	// The model's origin is at its feet and it faces +Y; the capsule's origin is its centre and it faces +X.
+	// Back to the offset the Blueprint gives the mesh component, which ACharacter keeps a copy of.
 	USkeletalMeshComponent* Body = GetMesh();
 	Body->AttachToComponent(GetCapsuleComponent(), FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-	Body->SetRelativeLocationAndRotation(
-		FVector(0.f, 0.f, -GetCapsuleComponent()->GetScaledCapsuleHalfHeight()), FRotator(0.f, -90.f, 0.f));
+	Body->SetRelativeLocationAndRotation(GetBaseTranslationOffset(), GetBaseRotationOffset());
 }
 
 void AHKHuman::Revive()

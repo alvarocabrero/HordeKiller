@@ -89,7 +89,7 @@ The same steps by hand, in case the script cannot be used. Adjust the engine pat
    "C:\Program Files\Epic Games\UE_5.8\Engine\Binaries\Win64\UnrealEditor-Cmd.exe" "%CD%\HordeKiller.uproject" -run=pythonscript -script="%CD%\Tools\create_anim_blueprint.py"
    ```
 
-   Without this step the game still runs, with placeholder shapes instead of the models. See [Character models](#character-models).
+   Without this step the game still runs, but the characters have no body and cannot be seen. See [Character models](#character-models).
 
 5. Open the editor and press **Play**.
 
@@ -104,7 +104,7 @@ The same steps by hand, in case the script cannot be used. Adjust the engine pat
 
 ## Tuning
 
-Every gameplay value is an editable property. For the player and the enemy, edit them in the Class Defaults of `BP_HKPlayer` and `BP_HKEnemy` (see [Blueprints](#blueprints)); a value set there overrides the C++ default. For the other classes, change the defaults in the headers. Distances are in centimetres, speeds in centimetres per second and times in seconds.
+Every gameplay value is an editable property. For the player and the enemy, the values live in `BP_HKPlayer` and `BP_HKEnemy` (see [Blueprints](#blueprints)): the C++ constructors only create the components and set nothing that a Blueprint can set. Values that belong to an engine component, such as walk speed or the camera distance, are set on that component in the Blueprint instead of being duplicated as properties of the class. For the other classes, change the defaults in the headers. Distances are in centimetres, speeds in centimetres per second and times in seconds.
 
 ### Weapon and player (`AHKPlayer`)
 
@@ -114,10 +114,22 @@ Every gameplay value is an editable property. For the player and the enemy, edit
 | `MuzzleDistance` | 100 | Distance in front of the player where projectiles spawn |
 | `MuzzleHeight` | 50 | Height above the centre of the player from which projectiles are fired |
 | `AimRange` | 20000 | How far the crosshair's view line is checked for something to aim at |
-| `CameraDistance` | 350 | Distance from the player to the third-person camera |
-| `CameraOffset` | (0, 60, 70) | Offset of the camera from the end of its boom: forward, right, up |
 | `MaxHealth` | 100 | Starting health (property inherited from `AHKHuman`) |
-| `ProjectileClass` | `AHKProjectile` | Projectile spawned on each shot |
+| `ProjectileClass` | `AHKProjectile` (set in `BP_HKPlayer`) | Projectile spawned on each shot |
+
+Set on components of `BP_HKPlayer`:
+
+| Component | Field | Value | Meaning |
+| --- | --- | --- | --- |
+| Capsule | Radius / Half Height | 42 / 96 | Size of the player's collision |
+| Character Movement | Jump Z Velocity | 600 | Jump strength |
+| Character Movement | Air Control | 0.35 | How much the player steers in the air |
+| Character Movement | Max Walk Speed | 600 | Running speed, faster than the enemies |
+| Character Movement | Braking Deceleration Walking | 2000 | How quickly the player stops |
+| Camera Boom | Target Arm Length | 350 | Distance from the player to the camera |
+| Camera Boom | Socket Offset | (0, 60, 70) | Camera offset from the end of the boom: forward, right, up |
+| Camera Boom | Use Pawn Control Rotation | on | The boom follows where the player looks |
+| Gun Mesh | Static Mesh, Scale, Location | engine cube, (0.5, 0.08, 0.08), (-10, 4, 0) | The placeholder weapon in the right hand |
 
 ### Projectile (`AHKProjectile`)
 
@@ -132,8 +144,7 @@ Every gameplay value is an editable property. For the player and the enemy, edit
 
 | Property | Default | Meaning |
 | --- | --- | --- |
-| `MaxHealth` | 2 | Starting health (inherited from `AHKHuman`); with `Damage` at 1 this is two shots |
-| `MoveSpeed` | 380 | Running speed (the player runs at 600) |
+| `MaxHealth` | 2 (set in `BP_HKEnemy`) | Starting health (inherited from `AHKHuman`); with `Damage` at 1 this is two shots |
 | `AttackDamage` | 10 | Damage dealt to the player per attack |
 | `AttackRange` | 110 | Distance at which an attack lands |
 | `AttackCooldown` | 1 | Time between attacks |
@@ -141,6 +152,18 @@ Every gameplay value is an editable property. For the player and the enemy, edit
 | `HealthyColor` / `WoundedColor` | red / orange | Body colour before and after the first hit |
 | `CorpseLifetime` | 10 | Time the corpse stays after death before it is removed |
 | `DeathImpulse` | 500 | Speed given to the ragdoll at death, away from what killed the enemy |
+
+Set on `BP_HKEnemy` itself and on its components:
+
+| Where | Field | Value | Meaning |
+| --- | --- | --- | --- |
+| Class Defaults | Auto Possess AI | Placed in World or Spawned | Spawned enemies need an AI controller to move |
+| Class Defaults | Use Controller Rotation Yaw | off | The enemy turns towards where it runs |
+| Character Movement | Max Walk Speed | 380 | Running speed (the player runs at 600) |
+| Character Movement | Orient Rotation to Movement | on | Faces the direction of travel |
+| Character Movement | Rotation Rate | yaw 540 | How fast it turns, in degrees per second |
+| Character Movement | Use RVO Avoidance | on | Keeps the horde from queueing behind the player |
+| Character Movement | Avoidance Consideration Radius | 150 | Distance at which other enemies are avoided |
 
 ### Waves (`UHKHordeConfig` data asset)
 
@@ -217,7 +240,7 @@ It started as a copy of the engine's `ABP_Unarmed`, re-parented to `UHKAnimInsta
 
 The C++ variables used to be named with a `Human` prefix (`HumanGroundSpeed` and so on). `Config/DefaultEngine.ini` has redirects from those names, so a Blueprint that was wired to them keeps working.
 
-If the models are not installed, the game falls back to placeholders: enemies appear as coloured cylinders and the player has no body. Nothing else changes.
+If the models are not installed, the characters have no body and cannot be seen; they still move, collide and fight. There are no placeholder shapes.
 
 ### Using other models
 
@@ -227,23 +250,29 @@ The C++ classes name no assets. The model is assigned in `BP_HKPlayer` and `BP_H
 | --- | --- | --- | --- |
 | Skeletal Mesh Asset | `SKM_Quinn_Simple` | `SKM_Manny_Simple` | Skeletal mesh shown as the body |
 | Anim Class | `ABP_HKHuman` | `ABP_HKZombie` | Animation Blueprint that drives it; must match the model's skeleton |
+| Location | (0, 0, -96) | (0, 0, -88) | Lowers the model by the capsule's half height, so its feet are on the ground |
+| Rotation | yaw -90 | yaw -90 | The mannequins face +Y and characters face +X |
 
-The enemy's `AttackAnimation` is a property of `AHKEnemy`, set in the Class Defaults of `BP_HKEnemy`. A character spawned from its C++ class instead of its Blueprint has none of these and shows its placeholder shape.
+The enemy's `AttackAnimation` is a property of `AHKEnemy`, set in the Class Defaults of `BP_HKEnemy`. A character spawned from its C++ class instead of its Blueprint has none of these and has no visible body.
 
 The tint is applied to a material parameter named `Paint Tint`, which is what the mannequin materials use. A different model needs a material with that parameter for the enemy colours to show.
 
 ## Blueprints
 
-The player and the enemy each have a Blueprint that derives from their C++ class:
+Every gameplay class has a Blueprint that derives from it, and the game uses the Blueprints, not the C++ classes directly. The C++ constructors only create components; the values, and the assets each class uses, are set in its Blueprint:
 
 | Blueprint | Parent class | Location |
 | --- | --- | --- |
 | `BP_HKPlayer` | `AHKPlayer` | `Content/Blueprints/Characters` |
+| `BP_HKProjectile` | `AHKProjectile` | `Content/Blueprints/Weapons` |
+| `BP_HKGameMode` | `AHKGameMode` | `Content/Blueprints/Game` |
+| `BP_HKHUD` | `AHKHUD` | `Content/Blueprints/UI` |
+| `BP_HKHordeGenerator` | `AHKHordeGenerator` | `Content/Blueprints/Hordes` |
 | `BP_HKEnemy` | `AHKEnemy` | `Content/Blueprints/Characters` |
 
 They contain no logic of their own. They exist so that values and components can be changed in the editor without recompiling: open one, select **Class Defaults** and edit the properties listed under [Tuning](#tuning), or select a component to swap its mesh or material.
 
-The game mode uses these Blueprints automatically. If one is missing, it falls back to the C++ class, so the game still runs. The Output Log shows which classes are in use on the line starting with `LogHordeKiller: Player class`.
+`Config/DefaultEngine.ini` sets `BP_HKGameMode` as the game mode. Its Class Defaults name `BP_HKPlayer` as the player and `BP_HKHUD` as the HUD, and `BP_HKPlayer` names `BP_HKProjectile` as its projectile. There is no fallback to the C++ classes any more: without these Blueprints the game has no player. `BP_HKHordeGenerator` exists but is not placed in the levels yet; they still contain the C++ generator, which has no values a Blueprint would add. The Output Log shows which classes are in use on the line starting with `LogHordeKiller: Level`.
 
 The Blueprints were generated with `Tools/create_blueprints.py`. To recreate a Blueprint that has been deleted, build the project and run:
 
@@ -265,6 +294,8 @@ Content/
   Blueprints/Characters/
     BP_HKPlayer            Blueprint of the player (parent AHKPlayer)
     BP_HKEnemy                Blueprint of the enemy (parent AHKEnemy)
+  Blueprints/Weapons/BP_HKProjectile, Game/BP_HKGameMode, UI/BP_HKHUD, Hordes/BP_HKHordeGenerator
+                            Blueprints of the projectile, the game mode, the HUD and the horde generator
   Data/Hordes/
     DA_HKHorde_Default        Default horde config (data asset of class UHKHordeConfig)
   Maps/Test/
@@ -398,7 +429,7 @@ Enemies waiting in the pool are hidden, do not collide or tick, and are parked b
 
 When an enemy's health reaches zero it stops moving and attacking, its capsule stops colliding, and its body becomes a ragdoll: the bones are simulated by the physics engine using the mannequin's physics asset (`PA_Mannequin`), with an initial push away from whatever killed it. Projectiles no longer damage it, but still collide with it. After `CorpseLifetime` seconds the enemy returns to the pool.
 
-Without the character models installed there is no ragdoll: the placeholder enemy returns to the pool as soon as it dies.
+Without the character models installed there is no ragdoll: the enemy returns to the pool as soon as it dies.
 
 `AHKEnemy` also has a `UPhysicsControlComponent`, from the engine's PhysicsControl plugin. It is there for partial ragdolls and physical hit reactions, and has no controls set up yet; the death ragdoll does not use it.
 
