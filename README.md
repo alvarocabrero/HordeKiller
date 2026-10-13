@@ -137,7 +137,7 @@ Every gameplay value is an editable property. For the player and the enemy, edit
 | `AttackDamage` | 10 | Damage dealt to the player per attack |
 | `AttackRange` | 110 | Distance at which an attack lands |
 | `AttackCooldown` | 1 | Time between attacks |
-| `AttackAnimation` | `Zombie_Scratch` | Animation played on the body each time the enemy attacks, sped up to fit `AttackCooldown`; empty for none |
+| `AttackAnimation` | `Zombie_Scratch` (set in `BP_HKEnemy`) | Animation played on the body each time the enemy attacks, sped up to fit `AttackCooldown`; empty for none |
 | `HealthyColor` / `WoundedColor` | red / orange | Body colour before and after the first hit |
 | `CorpseLifetime` | 10 | Time the corpse stays after death before it is removed |
 | `DeathImpulse` | 500 | Speed given to the ragdoll at death, away from what killed the enemy |
@@ -221,12 +221,14 @@ If the models are not installed, the game falls back to placeholders: enemies ap
 
 ### Using other models
 
-The model is set by two properties of `AHKHuman`, inherited by the player and the enemy and editable in the Class Defaults of `BP_HKPlayer` and `BP_HKEnemy`:
+The model is set by two properties of `AHKHuman`, inherited by the player and the enemy. They are empty in C++: the values live in the Class Defaults of `BP_HKPlayer` and `BP_HKEnemy`, under **Appearance**, so changing a model never needs a rebuild.
 
-| Property | Default | Meaning |
-| --- | --- | --- |
-| `BodyModel` | `SKM_Manny_Simple` (enemy), `SKM_Quinn_Simple` (player) | Skeletal mesh shown as the body |
-| `BodyAnimClass` | `ABP_HKHuman` | Animation Blueprint that drives it; must match the model's skeleton |
+| Property | `BP_HKPlayer` | `BP_HKEnemy` | Meaning |
+| --- | --- | --- | --- |
+| `BodyModel` | `SKM_Quinn_Simple` | `SKM_Manny_Simple` | Skeletal mesh shown as the body |
+| `BodyAnimClass` | `ABP_HKHuman` | `ABP_HKZombie` | Animation Blueprint that drives it; must match the model's skeleton |
+
+The enemy's `AttackAnimation` is assigned in `BP_HKEnemy` in the same way. A character spawned from its C++ class instead of its Blueprint has none of these and shows its placeholder shape.
 
 The tint is applied to a material parameter named `Paint Tint`, which is what the mannequin materials use. A different model needs a material with that parameter for the enemy colours to show.
 

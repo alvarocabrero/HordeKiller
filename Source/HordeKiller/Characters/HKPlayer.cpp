@@ -63,9 +63,6 @@ AHKPlayer::AHKPlayer()
 
 	ProjectileClass = AHKProjectile::StaticClass();
 	MaxHealth = 100.f;
-
-	// The player uses Quinn.
-	BodyModel = FSoftObjectPath(TEXT("/Game/Characters/Mannequins/Meshes/SKM_Quinn_Simple.SKM_Quinn_Simple"));
 }
 
 void AHKPlayer::BeginPlay()

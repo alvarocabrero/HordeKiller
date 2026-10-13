@@ -54,10 +54,6 @@ AHKEnemy::AHKEnemy()
 
 	// Two projectile hits at the default damage of 1.
 	MaxHealth = 2.f;
-
-	// Zombie locomotion instead of the mannequin's, and a zombie scratch as the attack.
-	BodyAnimClass = FSoftObjectPath(TEXT("/Game/Characters/Animation/ABP_HKZombie.ABP_HKZombie_C"));
-	AttackAnimation = FSoftObjectPath(TEXT("/Game/ThirdParty/Quaternius/Animations/Zombie_Scratch.Zombie_Scratch"));
 }
 
 void AHKEnemy::SetHordeGenerator(AHKHordeGenerator* InGenerator)

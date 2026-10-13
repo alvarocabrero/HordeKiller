@@ -17,9 +17,11 @@ class USkeletalMesh;
  *     each subclass only says what is specific to it by overriding two hooks, HandleDamaged (called
  *     after a hit the character survives) and HandleDeath (called once, when health reaches zero).
  *   - A humanoid body: a skeletal mesh with an animation Blueprint, shown on the character's mesh
- *     component. The model is optional. Its assets (Epic's mannequins) are not stored in the
- *     repository, so when they are missing the character simply has no body model and subclasses
- *     keep their placeholder shapes.
+ *     component. The model and its animation Blueprint are not named in code: they are assigned in
+ *     the Class Defaults of each character's Blueprint (BP_HKPlayer, BP_HKEnemy). The model is
+ *     optional. The ones in use (Epic's mannequins) are not stored in the repository, so when they
+ *     are missing, or when the C++ class is used without its Blueprint, the character simply has no
+ *     body model and subclasses keep their placeholder shapes.
  *
  * The class is abstract: it cannot be spawned or placed in a level on its own.
  */
@@ -29,7 +31,7 @@ class HORDEKILLER_API AHKHuman : public ACharacter
 	GENERATED_BODY()
 
 public:
-	/** Sets the default body model and orients the mesh component for it. */
+	/** Orients the mesh component for a body model. The model itself is chosen in each character's Blueprint. */
 	AHKHuman();
 
 	/**
@@ -121,13 +123,14 @@ protected:
 	float MaxHealth = 100.f;
 
 	/**
-	 * Humanoid model shown as the character's body. A soft reference: the asset is only loaded when play
-	 * begins, and it may be missing. Leave empty to have no body model.
+	 * Humanoid model shown as the character's body. Empty in C++: assign it in the character's Blueprint.
+	 * A soft reference: the asset is only loaded when play begins, and it may be missing. Leave empty to
+	 * have no body model.
 	 */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Appearance")
 	TSoftObjectPtr<USkeletalMesh> BodyModel;
 
-	/** Animation Blueprint that drives the body model. It must be made for the model's skeleton. */
+	/** Animation Blueprint that drives the body model. Empty in C++: assign it in the character's Blueprint. It must be made for the model's skeleton. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Appearance")
 	TSoftClassPtr<UAnimInstance> BodyAnimClass;
 
