@@ -221,14 +221,14 @@ If the models are not installed, the game falls back to placeholders: enemies ap
 
 ### Using other models
 
-The model is set by two properties of `AHKHuman`, inherited by the player and the enemy. They are empty in C++: the values live in the Class Defaults of `BP_HKPlayer` and `BP_HKEnemy`, under **Appearance**, so changing a model never needs a rebuild.
+The C++ classes name no assets. The model is assigned in `BP_HKPlayer` and `BP_HKEnemy`, on the **Mesh** component every character has, in the two fields the engine provides for it, so changing a model never needs a rebuild:
 
-| Property | `BP_HKPlayer` | `BP_HKEnemy` | Meaning |
+| Field of the Mesh component | `BP_HKPlayer` | `BP_HKEnemy` | Meaning |
 | --- | --- | --- | --- |
-| `BodyModel` | `SKM_Quinn_Simple` | `SKM_Manny_Simple` | Skeletal mesh shown as the body |
-| `BodyAnimClass` | `ABP_HKHuman` | `ABP_HKZombie` | Animation Blueprint that drives it; must match the model's skeleton |
+| Skeletal Mesh Asset | `SKM_Quinn_Simple` | `SKM_Manny_Simple` | Skeletal mesh shown as the body |
+| Anim Class | `ABP_HKHuman` | `ABP_HKZombie` | Animation Blueprint that drives it; must match the model's skeleton |
 
-The enemy's `AttackAnimation` is assigned in `BP_HKEnemy` in the same way. A character spawned from its C++ class instead of its Blueprint has none of these and shows its placeholder shape.
+The enemy's `AttackAnimation` is a property of `AHKEnemy`, set in the Class Defaults of `BP_HKEnemy`. A character spawned from its C++ class instead of its Blueprint has none of these and shows its placeholder shape.
 
 The tint is applied to a material parameter named `Paint Tint`, which is what the mannequin materials use. A different model needs a material with that parameter for the enemy colours to show.
 

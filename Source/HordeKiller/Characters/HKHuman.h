@@ -6,9 +6,6 @@
 #include "GameFramework/Character.h"
 #include "HKHuman.generated.h"
 
-class UAnimInstance;
-class USkeletalMesh;
-
 /**
  * Base class for every character in the game: the player and the enemies.
  *
@@ -17,11 +14,12 @@ class USkeletalMesh;
  *     each subclass only says what is specific to it by overriding two hooks, HandleDamaged (called
  *     after a hit the character survives) and HandleDeath (called once, when health reaches zero).
  *   - A humanoid body: a skeletal mesh with an animation Blueprint, shown on the character's mesh
- *     component. The model and its animation Blueprint are not named in code: they are assigned in
- *     the Class Defaults of each character's Blueprint (BP_HKPlayer, BP_HKEnemy). The model is
- *     optional. The ones in use (Epic's mannequins) are not stored in the repository, so when they
- *     are missing, or when the C++ class is used without its Blueprint, the character simply has no
- *     body model and subclasses keep their placeholder shapes.
+ *     component. The model and its animation Blueprint are not named in code: they are assigned on
+ *     the Mesh component of each character's Blueprint (BP_HKPlayer, BP_HKEnemy), in its Skeletal
+ *     Mesh Asset and Anim Class fields. The model is optional. The ones in use (Epic's mannequins)
+ *     are not stored in the repository, so when they are missing, or when the C++ class is used
+ *     without its Blueprint, the character simply has no body model and subclasses keep their
+ *     placeholder shapes.
  *
  * The class is abstract: it cannot be spawned or placed in a level on its own.
  */
@@ -31,7 +29,7 @@ class HORDEKILLER_API AHKHuman : public ACharacter
 	GENERATED_BODY()
 
 public:
-	/** Orients the mesh component for a body model. The model itself is chosen in each character's Blueprint. */
+	/** Orients the mesh component for a body model. The model itself is assigned on that component in each character's Blueprint. */
 	AHKHuman();
 
 	/**
@@ -57,11 +55,11 @@ public:
 	/** @return True once health has reached zero. */
 	bool IsDead() const { return bDead; }
 
-	/** @return True if the humanoid body model was found and is being shown. */
+	/** @return True if the mesh component has a body model and it is being shown. */
 	bool HasBodyModel() const { return bHasBodyModel; }
 
 protected:
-	/** Registers with the actor manager, fills health from MaxHealth and applies the body model. */
+	/** Registers with the actor manager, fills health from MaxHealth and stands the body model, if any, on the capsule. */
 	virtual void BeginPlay() override;
 
 	/**
@@ -106,14 +104,6 @@ protected:
 	void SetBodyTint(const FLinearColor& Color);
 
 private:
-	/**
-	 * Loads BodyModel and BodyAnimClass and puts them on the mesh component, with its feet at the bottom
-	 * of the capsule.
-	 *
-	 * @return True if the model was found and applied.
-	 */
-	bool ApplyBodyModel();
-
 	/** Attaches the mesh component to the capsule with its feet at the bottom, facing forward. */
 	void PlaceBodyOnCapsule();
 
@@ -121,18 +111,6 @@ protected:
 	/** Health the character starts with. Subclasses set their own default in their constructor. */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Health")
 	float MaxHealth = 100.f;
-
-	/**
-	 * Humanoid model shown as the character's body. Empty in C++: assign it in the character's Blueprint.
-	 * A soft reference: the asset is only loaded when play begins, and it may be missing. Leave empty to
-	 * have no body model.
-	 */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Appearance")
-	TSoftObjectPtr<USkeletalMesh> BodyModel;
-
-	/** Animation Blueprint that drives the body model. Empty in C++: assign it in the character's Blueprint. It must be made for the model's skeleton. */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Appearance")
-	TSoftClassPtr<UAnimInstance> BodyAnimClass;
 
 private:
 	/** The actor that dealt the most recent damage. Weak, because projectiles destroy themselves on impact. */
@@ -144,6 +122,6 @@ private:
 	/** True once health has reached zero. Blocks further damage. */
 	bool bDead = false;
 
-	/** True if the body model was found and applied in BeginPlay. */
+	/** True if the mesh component had a body model in BeginPlay. */
 	bool bHasBodyModel = false;
 };

@@ -25,7 +25,7 @@ All notable changes to this project are listed here. The format follows [Keep a 
 
 ### Changed
 
-- The body model, the animation Blueprint and the enemy's attack animation are no longer named in C++. They are assigned in the Class Defaults of `BP_HKPlayer` and `BP_HKEnemy`.
+- The body model, the animation Blueprint and the enemy's attack animation are no longer named in C++. The model and the animation Blueprint are assigned on the Mesh component of `BP_HKPlayer` and `BP_HKEnemy`, in its own Skeletal Mesh Asset and Anim Class fields; `AHKHuman` no longer has `BodyModel` and `BodyAnimClass` properties. The attack animation is set in the Class Defaults of `BP_HKEnemy`.
 - The player is now seen in third person: a camera on a boom behind and over the right shoulder replaces the first-person camera, the body is visible, and shots leave the chest towards the point under the crosshair.
 - Migrated from Unreal Engine 5.6 to 5.8. The build targets use `BuildSettingsVersion.V7`. The 5.6 version of the project is kept on the `ue-5.6` branch.
 - The player class is now `AHKPlayer` (it was `AHKCharacter`), in `HKPlayer.h` / `.cpp`, and its Blueprint is `BP_HKPlayer`. A class redirect in `Config/DefaultEngine.ini` keeps assets saved with the old name loading.

@@ -1,18 +1,14 @@
 // Copyright (c) 2026 Álvaro Cabrero Barros. Licensed under the MIT License. See LICENSE in the repository root.
 
 #include "Characters/HKHuman.h"
-#include "Animation/AnimInstance.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Engine/SkeletalMesh.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Managers/HKActorManager.h"
-#include "Misc/PackageName.h"
 
 AHKHuman::AHKHuman()
 {
-	// BodyModel and BodyAnimClass are left empty here: each character's Blueprint chooses them.
-
 	// The mannequin faces +Y; characters face +X.
 	GetMesh()->SetRelativeRotation(FRotator(0.f, -90.f, 0.f));
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -27,7 +23,12 @@ void AHKHuman::BeginPlay()
 	// Read here so that values set by subclasses or Blueprints apply.
 	Health = MaxHealth;
 
-	bHasBodyModel = ApplyBodyModel();
+	// The model is assigned on the mesh component in the character's Blueprint; it may be missing.
+	bHasBodyModel = GetMesh()->GetSkeletalMeshAsset() != nullptr;
+	if (bHasBodyModel)
+	{
+		PlaceBodyOnCapsule();
+	}
 }
 
 void AHKHuman::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -35,34 +36,6 @@ void AHKHuman::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	UHKActorManager::Unregister(this);
 
 	Super::EndPlay(EndPlayReason);
-}
-
-bool AHKHuman::ApplyBodyModel()
-{
-	// Checked first because loading a missing asset logs a warning, and missing is a normal case here.
-	if (BodyModel.IsNull() || !FPackageName::DoesPackageExist(BodyModel.GetLongPackageName()))
-	{
-		return false;
-	}
-
-	USkeletalMesh* Model = BodyModel.LoadSynchronous();
-	if (!Model)
-	{
-		return false;
-	}
-
-	USkeletalMeshComponent* Body = GetMesh();
-	Body->SetSkeletalMesh(Model);
-	PlaceBodyOnCapsule();
-
-	if (!BodyAnimClass.IsNull() && FPackageName::DoesPackageExist(BodyAnimClass.GetLongPackageName()))
-	{
-		if (UClass* AnimClass = BodyAnimClass.LoadSynchronous())
-		{
-			Body->SetAnimInstanceClass(AnimClass);
-		}
-	}
-	return true;
 }
 
 void AHKHuman::PlaceBodyOnCapsule()
